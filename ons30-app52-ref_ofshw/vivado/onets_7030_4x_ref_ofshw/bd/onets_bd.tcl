@@ -143,18 +143,6 @@ proc create_root_design { parentCell } {
   set axi_dma_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_dma:7.1 axi_dma_0 ]
   set_property -dict [ list CONFIG.c_include_mm2s_dre {1} CONFIG.c_include_s2mm_dre {1} CONFIG.c_sg_use_stsapp_length {1}  ] $axi_dma_0
 
-  # Create instance: axi_dma_1, and set properties
-  set axi_dma_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_dma:7.1 axi_dma_1 ]
-  set_property -dict [ list CONFIG.c_include_mm2s_dre {1} CONFIG.c_include_s2mm_dre {1} CONFIG.c_sg_use_stsapp_length {1}  ] $axi_dma_1
-
-  # Create instance: axi_dma_2, and set properties
-  set axi_dma_2 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_dma:7.1 axi_dma_2 ]
-  set_property -dict [ list CONFIG.c_include_mm2s_dre {1} CONFIG.c_include_s2mm_dre {1} CONFIG.c_sg_use_stsapp_length {1}  ] $axi_dma_2
-
-  # Create instance: axi_dma_3, and set properties
-  set axi_dma_3 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_dma:7.1 axi_dma_3 ]
-  set_property -dict [ list CONFIG.c_include_mm2s_dre {1} CONFIG.c_include_s2mm_dre {1} CONFIG.c_sg_use_stsapp_length {1}  ] $axi_dma_3
-
   # Create instance: axi_ethernet_0, and set properties
   set axi_ethernet_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_ethernet:6.0 axi_ethernet_0 ]
   set_property -dict [ list CONFIG.ENABLE_LVDS {true} CONFIG.PHYADDR {5} CONFIG.PHY_TYPE {SGMII} CONFIG.Statistics_Counters {true} CONFIG.Statistics_Reset {false} CONFIG.Statistics_Width {32bit}  ] $axi_ethernet_0
@@ -173,11 +161,11 @@ proc create_root_design { parentCell } {
 
   # Create instance: axi_interc_gp, and set properties
   set axi_interc_gp [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 axi_interc_gp ]
-  set_property -dict [ list CONFIG.NUM_MI {9}  ] $axi_interc_gp
+  set_property -dict [ list CONFIG.NUM_MI {6}  ] $axi_interc_gp
 
   # Create instance: axi_interc_hp, and set properties
   set axi_interc_hp [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 axi_interc_hp ]
-  set_property -dict [ list CONFIG.NUM_MI {1} CONFIG.NUM_SI {12}  ] $axi_interc_hp
+  set_property -dict [ list CONFIG.NUM_MI {1} CONFIG.NUM_SI {3}  ] $axi_interc_hp
 
   # Create instance: const_gnd, and set properties
   set const_gnd [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.0 const_gnd ]
@@ -186,8 +174,11 @@ proc create_root_design { parentCell } {
   # Create instance: const_vcc, and set properties
   set const_vcc [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.0 const_vcc ]
 
-  # Create instance: packet_pipeline_0, and set properties
-  set packet_pipeline_0 [ create_bd_cell -type ip -vlnv meshsr:user:packet_pipeline_v1_0:1.0 packet_pipeline_0 ]
+  # Create instance: dma2eth_intercon_0, and set properties
+  set dma2eth_intercon_0 [ create_bd_cell -type ip -vlnv meshsr:user:dma2eth_intercon:1.0 dma2eth_intercon_0 ]
+
+  # Create instance: eth2dma_intercon_0, and set properties
+  set eth2dma_intercon_0 [ create_bd_cell -type ip -vlnv meshsr:user:eth2dma_intercon:1.0 eth2dma_intercon_0 ]
 
   # Create instance: proc_sys_reset_0, and set properties
   set proc_sys_reset_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 proc_sys_reset_0 ]
@@ -196,99 +187,76 @@ proc create_root_design { parentCell } {
   set processing_system7_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:processing_system7:5.3 processing_system7_0 ]
   set_property -dict [ list CONFIG.PCW_ENET0_ENET0_IO {MIO 16 .. 27} CONFIG.PCW_ENET0_GRP_MDIO_ENABLE {1} CONFIG.PCW_ENET0_PERIPHERAL_ENABLE {1} CONFIG.PCW_ENET0_PERIPHERAL_FREQMHZ {1000 Mbps} CONFIG.PCW_ENET0_RESET_ENABLE {1} CONFIG.PCW_ENET0_RESET_IO {MIO 10} CONFIG.PCW_EN_CLK1_PORT {1} CONFIG.PCW_EN_CLK2_PORT {1} CONFIG.PCW_FPGA0_PERIPHERAL_FREQMHZ {125} CONFIG.PCW_FPGA1_PERIPHERAL_FREQMHZ {75} CONFIG.PCW_FPGA2_PERIPHERAL_FREQMHZ {200} CONFIG.PCW_GPIO_MIO_GPIO_ENABLE {1} CONFIG.PCW_IRQ_F2P_INTR {1} CONFIG.PCW_MIO_0_PULLUP {disabled} CONFIG.PCW_MIO_10_PULLUP {disabled} CONFIG.PCW_MIO_11_PULLUP {disabled} CONFIG.PCW_MIO_12_PULLUP {disabled} CONFIG.PCW_MIO_13_PULLUP {disabled} CONFIG.PCW_MIO_14_PULLUP {disabled} CONFIG.PCW_MIO_15_PULLUP {disabled} CONFIG.PCW_MIO_16_PULLUP {disabled} CONFIG.PCW_MIO_17_PULLUP {disabled} CONFIG.PCW_MIO_18_PULLUP {disabled} CONFIG.PCW_MIO_19_PULLUP {disabled} CONFIG.PCW_MIO_1_PULLUP {disabled} CONFIG.PCW_MIO_20_PULLUP {disabled} CONFIG.PCW_MIO_21_PULLUP {disabled} CONFIG.PCW_MIO_22_PULLUP {disabled} CONFIG.PCW_MIO_23_PULLUP {disabled} CONFIG.PCW_MIO_24_PULLUP {disabled} CONFIG.PCW_MIO_25_PULLUP {disabled} CONFIG.PCW_MIO_26_PULLUP {disabled} CONFIG.PCW_MIO_27_PULLUP {disabled} CONFIG.PCW_MIO_28_PULLUP {disabled} CONFIG.PCW_MIO_29_PULLUP {disabled} CONFIG.PCW_MIO_30_PULLUP {disabled} CONFIG.PCW_MIO_31_PULLUP {disabled} CONFIG.PCW_MIO_32_PULLUP {disabled} CONFIG.PCW_MIO_33_PULLUP {disabled} CONFIG.PCW_MIO_34_PULLUP {disabled} CONFIG.PCW_MIO_35_PULLUP {disabled} CONFIG.PCW_MIO_36_PULLUP {disabled} CONFIG.PCW_MIO_37_PULLUP {disabled} CONFIG.PCW_MIO_38_PULLUP {disabled} CONFIG.PCW_MIO_39_PULLUP {disabled} CONFIG.PCW_MIO_40_PULLUP {disabled} CONFIG.PCW_MIO_41_PULLUP {disabled} CONFIG.PCW_MIO_42_PULLUP {disabled} CONFIG.PCW_MIO_43_PULLUP {disabled} CONFIG.PCW_MIO_44_PULLUP {disabled} CONFIG.PCW_MIO_45_PULLUP {disabled} CONFIG.PCW_MIO_46_PULLUP {disabled} CONFIG.PCW_MIO_47_PULLUP {disabled} CONFIG.PCW_MIO_48_PULLUP {disabled} CONFIG.PCW_MIO_49_PULLUP {disabled} CONFIG.PCW_MIO_50_PULLUP {disabled} CONFIG.PCW_MIO_51_PULLUP {disabled} CONFIG.PCW_MIO_52_PULLUP {disabled} CONFIG.PCW_MIO_53_PULLUP {disabled} CONFIG.PCW_MIO_9_PULLUP {disabled} CONFIG.PCW_PRESET_BANK1_VOLTAGE {LVCMOS 2.5V} CONFIG.PCW_QSPI_GRP_FBCLK_ENABLE {1} CONFIG.PCW_QSPI_PERIPHERAL_ENABLE {1} CONFIG.PCW_SD0_GRP_CD_ENABLE {1} CONFIG.PCW_SD0_GRP_CD_IO {MIO 14} CONFIG.PCW_SD0_PERIPHERAL_ENABLE {1} CONFIG.PCW_SDIO_PERIPHERAL_FREQMHZ {50} CONFIG.PCW_TTC0_PERIPHERAL_ENABLE {1} CONFIG.PCW_TTC1_PERIPHERAL_ENABLE {0} CONFIG.PCW_UART0_PERIPHERAL_ENABLE {1} CONFIG.PCW_UART0_UART0_IO {MIO 50 .. 51} CONFIG.PCW_UIPARAM_DDR_PARTNO {MT41J256M16 RE-125} CONFIG.PCW_UIPARAM_DDR_USE_INTERNAL_VREF {1} CONFIG.PCW_USB0_PERIPHERAL_ENABLE {1} CONFIG.PCW_USB0_RESET_ENABLE {1} CONFIG.PCW_USB0_RESET_IO {MIO 9} CONFIG.PCW_USE_FABRIC_INTERRUPT {1} CONFIG.PCW_USE_M_AXI_GP0 {1} CONFIG.PCW_USE_S_AXI_HP0 {1} CONFIG.PCW_WDT_PERIPHERAL_ENABLE {0}  ] $processing_system7_0
 
+  # Create instance: ref_openflow_core_0, and set properties
+  set ref_openflow_core_0 [ create_bd_cell -type ip -vlnv meshsr:user:ref_openflow_core:1.0 ref_openflow_core_0 ]
+
   # Create instance: xlconcat_0, and set properties
   set xlconcat_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:1.0 xlconcat_0 ]
-  set_property -dict [ list CONFIG.NUM_PORTS {12}  ] $xlconcat_0
+  set_property -dict [ list CONFIG.NUM_PORTS {6}  ] $xlconcat_0
 
   # Create interface connections
   connect_bd_intf_net -intf_net S00_AXI_1 [get_bd_intf_pins axi_interc_gp/S00_AXI] [get_bd_intf_pins processing_system7_0/M_AXI_GP0]
-  connect_bd_intf_net -intf_net axi_dma_0_M_AXIS_CNTRL [get_bd_intf_pins axi_dma_0/M_AXIS_CNTRL] [get_bd_intf_pins packet_pipeline_0/s_axis_mm2s_ctrl_0]
-  connect_bd_intf_net -intf_net axi_dma_0_M_AXIS_MM2S [get_bd_intf_pins axi_dma_0/M_AXIS_MM2S] [get_bd_intf_pins packet_pipeline_0/s_axis_mm2s_0]
+  connect_bd_intf_net -intf_net axi_dma_0_M_AXIS_CNTRL [get_bd_intf_pins axi_dma_0/M_AXIS_CNTRL] [get_bd_intf_pins dma2eth_intercon_0/s_txc_axis]
+  connect_bd_intf_net -intf_net axi_dma_0_M_AXIS_MM2S [get_bd_intf_pins axi_dma_0/M_AXIS_MM2S] [get_bd_intf_pins dma2eth_intercon_0/s_txd_axis]
   connect_bd_intf_net -intf_net axi_dma_0_M_AXI_MM2S [get_bd_intf_pins axi_dma_0/M_AXI_MM2S] [get_bd_intf_pins axi_interc_hp/S01_AXI]
   connect_bd_intf_net -intf_net axi_dma_0_M_AXI_S2MM [get_bd_intf_pins axi_dma_0/M_AXI_S2MM] [get_bd_intf_pins axi_interc_hp/S02_AXI]
   connect_bd_intf_net -intf_net axi_dma_0_M_AXI_SG [get_bd_intf_pins axi_dma_0/M_AXI_SG] [get_bd_intf_pins axi_interc_hp/S00_AXI]
-  connect_bd_intf_net -intf_net axi_dma_1_M_AXIS_CNTRL [get_bd_intf_pins axi_dma_1/M_AXIS_CNTRL] [get_bd_intf_pins packet_pipeline_0/s_axis_mm2s_ctrl_1]
-  connect_bd_intf_net -intf_net axi_dma_1_M_AXIS_MM2S [get_bd_intf_pins axi_dma_1/M_AXIS_MM2S] [get_bd_intf_pins packet_pipeline_0/s_axis_mm2s_1]
-  connect_bd_intf_net -intf_net axi_dma_1_M_AXI_MM2S [get_bd_intf_pins axi_dma_1/M_AXI_MM2S] [get_bd_intf_pins axi_interc_hp/S04_AXI]
-  connect_bd_intf_net -intf_net axi_dma_1_M_AXI_S2MM [get_bd_intf_pins axi_dma_1/M_AXI_S2MM] [get_bd_intf_pins axi_interc_hp/S05_AXI]
-  connect_bd_intf_net -intf_net axi_dma_1_M_AXI_SG [get_bd_intf_pins axi_dma_1/M_AXI_SG] [get_bd_intf_pins axi_interc_hp/S03_AXI]
-  connect_bd_intf_net -intf_net axi_dma_2_M_AXIS_CNTRL [get_bd_intf_pins axi_dma_2/M_AXIS_CNTRL] [get_bd_intf_pins packet_pipeline_0/s_axis_mm2s_ctrl_2]
-  connect_bd_intf_net -intf_net axi_dma_2_M_AXIS_MM2S [get_bd_intf_pins axi_dma_2/M_AXIS_MM2S] [get_bd_intf_pins packet_pipeline_0/s_axis_mm2s_2]
-  connect_bd_intf_net -intf_net axi_dma_2_M_AXI_MM2S [get_bd_intf_pins axi_dma_2/M_AXI_MM2S] [get_bd_intf_pins axi_interc_hp/S07_AXI]
-  connect_bd_intf_net -intf_net axi_dma_2_M_AXI_S2MM [get_bd_intf_pins axi_dma_2/M_AXI_S2MM] [get_bd_intf_pins axi_interc_hp/S08_AXI]
-  connect_bd_intf_net -intf_net axi_dma_2_M_AXI_SG [get_bd_intf_pins axi_dma_2/M_AXI_SG] [get_bd_intf_pins axi_interc_hp/S06_AXI]
-  connect_bd_intf_net -intf_net axi_dma_3_M_AXIS_CNTRL [get_bd_intf_pins axi_dma_3/M_AXIS_CNTRL] [get_bd_intf_pins packet_pipeline_0/s_axis_mm2s_ctrl_3]
-  connect_bd_intf_net -intf_net axi_dma_3_M_AXIS_MM2S [get_bd_intf_pins axi_dma_3/M_AXIS_MM2S] [get_bd_intf_pins packet_pipeline_0/s_axis_mm2s_3]
-  connect_bd_intf_net -intf_net axi_dma_3_M_AXI_MM2S [get_bd_intf_pins axi_dma_3/M_AXI_MM2S] [get_bd_intf_pins axi_interc_hp/S10_AXI]
-  connect_bd_intf_net -intf_net axi_dma_3_M_AXI_S2MM [get_bd_intf_pins axi_dma_3/M_AXI_S2MM] [get_bd_intf_pins axi_interc_hp/S11_AXI]
-  connect_bd_intf_net -intf_net axi_dma_3_M_AXI_SG [get_bd_intf_pins axi_dma_3/M_AXI_SG] [get_bd_intf_pins axi_interc_hp/S09_AXI]
-  connect_bd_intf_net -intf_net axi_ethernet_0_m_axis_rxd [get_bd_intf_pins axi_ethernet_0/m_axis_rxd] [get_bd_intf_pins packet_pipeline_0/s_axis_rxd_0]
-  connect_bd_intf_net -intf_net axi_ethernet_0_m_axis_rxs [get_bd_intf_pins axi_ethernet_0/m_axis_rxs] [get_bd_intf_pins packet_pipeline_0/s_axis_rxs_0]
+  connect_bd_intf_net -intf_net axi_ethernet_0_m_axis_rxd [get_bd_intf_pins axi_ethernet_0/m_axis_rxd] [get_bd_intf_pins ref_openflow_core_0/s_axis_rxd_0]
+  connect_bd_intf_net -intf_net axi_ethernet_0_m_axis_rxs [get_bd_intf_pins axi_ethernet_0/m_axis_rxs] [get_bd_intf_pins ref_openflow_core_0/s_axis_rxs_0]
   connect_bd_intf_net -intf_net axi_ethernet_0_mdio [get_bd_intf_ports mdio] [get_bd_intf_pins axi_ethernet_0/mdio]
   connect_bd_intf_net -intf_net axi_ethernet_0_sgmii [get_bd_intf_ports sgmii_0] [get_bd_intf_pins axi_ethernet_0/sgmii]
-  connect_bd_intf_net -intf_net axi_ethernet_1_m_axis_rxd [get_bd_intf_pins axi_ethernet_1/m_axis_rxd] [get_bd_intf_pins packet_pipeline_0/s_axis_rxd_1]
-  connect_bd_intf_net -intf_net axi_ethernet_1_m_axis_rxs [get_bd_intf_pins axi_ethernet_1/m_axis_rxs] [get_bd_intf_pins packet_pipeline_0/s_axis_rxs_1]
+  connect_bd_intf_net -intf_net axi_ethernet_1_m_axis_rxd [get_bd_intf_pins axi_ethernet_1/m_axis_rxd] [get_bd_intf_pins ref_openflow_core_0/s_axis_rxd_1]
+  connect_bd_intf_net -intf_net axi_ethernet_1_m_axis_rxs [get_bd_intf_pins axi_ethernet_1/m_axis_rxs] [get_bd_intf_pins ref_openflow_core_0/s_axis_rxs_1]
   connect_bd_intf_net -intf_net axi_ethernet_1_sgmii [get_bd_intf_ports sgmii_1] [get_bd_intf_pins axi_ethernet_1/sgmii]
-  connect_bd_intf_net -intf_net axi_ethernet_2_m_axis_rxd [get_bd_intf_pins axi_ethernet_2/m_axis_rxd] [get_bd_intf_pins packet_pipeline_0/s_axis_rxd_2]
-  connect_bd_intf_net -intf_net axi_ethernet_2_m_axis_rxs [get_bd_intf_pins axi_ethernet_2/m_axis_rxs] [get_bd_intf_pins packet_pipeline_0/s_axis_rxs_2]
+  connect_bd_intf_net -intf_net axi_ethernet_2_m_axis_rxd [get_bd_intf_pins axi_ethernet_2/m_axis_rxd] [get_bd_intf_pins ref_openflow_core_0/s_axis_rxd_2]
+  connect_bd_intf_net -intf_net axi_ethernet_2_m_axis_rxs [get_bd_intf_pins axi_ethernet_2/m_axis_rxs] [get_bd_intf_pins ref_openflow_core_0/s_axis_rxs_2]
   connect_bd_intf_net -intf_net axi_ethernet_2_sgmii [get_bd_intf_ports sgmii_2] [get_bd_intf_pins axi_ethernet_2/sgmii]
-  connect_bd_intf_net -intf_net axi_ethernet_3_m_axis_rxd [get_bd_intf_pins axi_ethernet_3/m_axis_rxd] [get_bd_intf_pins packet_pipeline_0/s_axis_rxd_3]
-  connect_bd_intf_net -intf_net axi_ethernet_3_m_axis_rxs [get_bd_intf_pins axi_ethernet_3/m_axis_rxs] [get_bd_intf_pins packet_pipeline_0/s_axis_rxs_3]
+  connect_bd_intf_net -intf_net axi_ethernet_3_m_axis_rxd [get_bd_intf_pins axi_ethernet_3/m_axis_rxd] [get_bd_intf_pins ref_openflow_core_0/s_axis_rxd_3]
+  connect_bd_intf_net -intf_net axi_ethernet_3_m_axis_rxs [get_bd_intf_pins axi_ethernet_3/m_axis_rxs] [get_bd_intf_pins ref_openflow_core_0/s_axis_rxs_3]
   connect_bd_intf_net -intf_net axi_ethernet_3_sgmii [get_bd_intf_ports sgmii_3] [get_bd_intf_pins axi_ethernet_3/sgmii]
   connect_bd_intf_net -intf_net axi_interc_gp_M04_AXI [get_bd_intf_pins axi_dma_0/S_AXI_LITE] [get_bd_intf_pins axi_interc_gp/M04_AXI]
-  connect_bd_intf_net -intf_net axi_interc_gp_M05_AXI [get_bd_intf_pins axi_dma_1/S_AXI_LITE] [get_bd_intf_pins axi_interc_gp/M05_AXI]
-  connect_bd_intf_net -intf_net axi_interc_gp_M06_AXI [get_bd_intf_pins axi_dma_2/S_AXI_LITE] [get_bd_intf_pins axi_interc_gp/M06_AXI]
-  connect_bd_intf_net -intf_net axi_interc_gp_M07_AXI [get_bd_intf_pins axi_dma_3/S_AXI_LITE] [get_bd_intf_pins axi_interc_gp/M07_AXI]
-  connect_bd_intf_net -intf_net axi_interc_gp_M08_AXI [get_bd_intf_pins axi_interc_gp/M08_AXI] [get_bd_intf_pins packet_pipeline_0/s_axi_lite]
+  connect_bd_intf_net -intf_net axi_interc_gp_M05_AXI [get_bd_intf_pins axi_interc_gp/M05_AXI] [get_bd_intf_pins ref_openflow_core_0/s_axi_lite]
   connect_bd_intf_net -intf_net axi_interc_hp_M00_AXI [get_bd_intf_pins axi_interc_hp/M00_AXI] [get_bd_intf_pins processing_system7_0/S_AXI_HP0]
   connect_bd_intf_net -intf_net axi_interconnect_0_M00_AXI [get_bd_intf_pins axi_ethernet_0/s_axi] [get_bd_intf_pins axi_interc_gp/M00_AXI]
   connect_bd_intf_net -intf_net axi_interconnect_0_M01_AXI [get_bd_intf_pins axi_ethernet_1/s_axi] [get_bd_intf_pins axi_interc_gp/M01_AXI]
   connect_bd_intf_net -intf_net axi_interconnect_0_M02_AXI [get_bd_intf_pins axi_ethernet_2/s_axi] [get_bd_intf_pins axi_interc_gp/M02_AXI]
   connect_bd_intf_net -intf_net axi_interconnect_0_M03_AXI [get_bd_intf_pins axi_ethernet_3/s_axi] [get_bd_intf_pins axi_interc_gp/M03_AXI]
-  connect_bd_intf_net -intf_net packet_pipeline_0_m_axis_s2mm_0 [get_bd_intf_pins axi_dma_0/S_AXIS_S2MM] [get_bd_intf_pins packet_pipeline_0/m_axis_s2mm_0]
-  connect_bd_intf_net -intf_net packet_pipeline_0_m_axis_s2mm_1 [get_bd_intf_pins axi_dma_1/S_AXIS_S2MM] [get_bd_intf_pins packet_pipeline_0/m_axis_s2mm_1]
-  connect_bd_intf_net -intf_net packet_pipeline_0_m_axis_s2mm_2 [get_bd_intf_pins axi_dma_2/S_AXIS_S2MM] [get_bd_intf_pins packet_pipeline_0/m_axis_s2mm_2]
-  connect_bd_intf_net -intf_net packet_pipeline_0_m_axis_s2mm_3 [get_bd_intf_pins axi_dma_3/S_AXIS_S2MM] [get_bd_intf_pins packet_pipeline_0/m_axis_s2mm_3]
-  connect_bd_intf_net -intf_net packet_pipeline_0_m_axis_s2mm_sts_0 [get_bd_intf_pins axi_dma_0/S_AXIS_STS] [get_bd_intf_pins packet_pipeline_0/m_axis_s2mm_sts_0]
-  connect_bd_intf_net -intf_net packet_pipeline_0_m_axis_s2mm_sts_1 [get_bd_intf_pins axi_dma_1/S_AXIS_STS] [get_bd_intf_pins packet_pipeline_0/m_axis_s2mm_sts_1]
-  connect_bd_intf_net -intf_net packet_pipeline_0_m_axis_s2mm_sts_2 [get_bd_intf_pins axi_dma_2/S_AXIS_STS] [get_bd_intf_pins packet_pipeline_0/m_axis_s2mm_sts_2]
-  connect_bd_intf_net -intf_net packet_pipeline_0_m_axis_s2mm_sts_3 [get_bd_intf_pins axi_dma_3/S_AXIS_STS] [get_bd_intf_pins packet_pipeline_0/m_axis_s2mm_sts_3]
-  connect_bd_intf_net -intf_net packet_pipeline_0_m_axis_txc_1 [get_bd_intf_pins axi_ethernet_1/s_axis_txc] [get_bd_intf_pins packet_pipeline_0/m_axis_txc_1]
-  connect_bd_intf_net -intf_net packet_pipeline_0_m_axis_txc_2 [get_bd_intf_pins axi_ethernet_2/s_axis_txc] [get_bd_intf_pins packet_pipeline_0/m_axis_txc_2]
-  connect_bd_intf_net -intf_net packet_pipeline_0_m_axis_txd_0 [get_bd_intf_pins axi_ethernet_0/s_axis_txd] [get_bd_intf_pins packet_pipeline_0/m_axis_txd_0]
-  connect_bd_intf_net -intf_net packet_pipeline_0_m_axis_txd_3 [get_bd_intf_pins axi_ethernet_3/s_axis_txd] [get_bd_intf_pins packet_pipeline_0/m_axis_txd_3]
+  connect_bd_intf_net -intf_net dma2eth_intercon_0_m_txc0_axis [get_bd_intf_pins dma2eth_intercon_0/m_txc0_axis] [get_bd_intf_pins ref_openflow_core_0/s_axis_mm2s_ctrl_0]
+  connect_bd_intf_net -intf_net dma2eth_intercon_0_m_txc1_axis [get_bd_intf_pins dma2eth_intercon_0/m_txc1_axis] [get_bd_intf_pins ref_openflow_core_0/s_axis_mm2s_ctrl_1]
+  connect_bd_intf_net -intf_net dma2eth_intercon_0_m_txc2_axis [get_bd_intf_pins dma2eth_intercon_0/m_txc2_axis] [get_bd_intf_pins ref_openflow_core_0/s_axis_mm2s_ctrl_2]
+  connect_bd_intf_net -intf_net dma2eth_intercon_0_m_txc3_axis [get_bd_intf_pins dma2eth_intercon_0/m_txc3_axis] [get_bd_intf_pins ref_openflow_core_0/s_axis_mm2s_ctrl_3]
+  connect_bd_intf_net -intf_net dma2eth_intercon_0_m_txd0_axis [get_bd_intf_pins dma2eth_intercon_0/m_txd0_axis] [get_bd_intf_pins ref_openflow_core_0/s_axis_mm2s_0]
+  connect_bd_intf_net -intf_net dma2eth_intercon_0_m_txd1_axis [get_bd_intf_pins dma2eth_intercon_0/m_txd1_axis] [get_bd_intf_pins ref_openflow_core_0/s_axis_mm2s_1]
+  connect_bd_intf_net -intf_net dma2eth_intercon_0_m_txd2_axis [get_bd_intf_pins dma2eth_intercon_0/m_txd2_axis] [get_bd_intf_pins ref_openflow_core_0/s_axis_mm2s_2]
+  connect_bd_intf_net -intf_net dma2eth_intercon_0_m_txd3_axis [get_bd_intf_pins dma2eth_intercon_0/m_txd3_axis] [get_bd_intf_pins ref_openflow_core_0/s_axis_mm2s_3]
+  connect_bd_intf_net -intf_net eth2dma_intercon_0_m_rxd_axis [get_bd_intf_pins axi_dma_0/S_AXIS_S2MM] [get_bd_intf_pins eth2dma_intercon_0/m_rxd_axis]
+  connect_bd_intf_net -intf_net eth2dma_intercon_0_m_rxs_axis [get_bd_intf_pins axi_dma_0/S_AXIS_STS] [get_bd_intf_pins eth2dma_intercon_0/m_rxs_axis]
   connect_bd_intf_net -intf_net processing_system7_0_DDR [get_bd_intf_ports DDR] [get_bd_intf_pins processing_system7_0/DDR]
   connect_bd_intf_net -intf_net processing_system7_0_FIXED_IO [get_bd_intf_ports FIXED_IO] [get_bd_intf_pins processing_system7_0/FIXED_IO]
-  connect_bd_intf_net -intf_net s_axis_txc_1 [get_bd_intf_pins axi_ethernet_3/s_axis_txc] [get_bd_intf_pins packet_pipeline_0/m_axis_txc_3]
-  connect_bd_intf_net -intf_net s_axis_txc_2 [get_bd_intf_pins axi_ethernet_0/s_axis_txc] [get_bd_intf_pins packet_pipeline_0/m_axis_txc_0]
-  connect_bd_intf_net -intf_net s_axis_txd_1 [get_bd_intf_pins axi_ethernet_2/s_axis_txd] [get_bd_intf_pins packet_pipeline_0/m_axis_txd_2]
-  connect_bd_intf_net -intf_net s_axis_txd_2 [get_bd_intf_pins axi_ethernet_1/s_axis_txd] [get_bd_intf_pins packet_pipeline_0/m_axis_txd_1]
+  connect_bd_intf_net -intf_net ref_openflow_core_0_m_axis_s2mm_0 [get_bd_intf_pins eth2dma_intercon_0/s_rxd0_axis] [get_bd_intf_pins ref_openflow_core_0/m_axis_s2mm_0]
+  connect_bd_intf_net -intf_net ref_openflow_core_0_m_axis_s2mm_1 [get_bd_intf_pins eth2dma_intercon_0/s_rxd1_axis] [get_bd_intf_pins ref_openflow_core_0/m_axis_s2mm_1]
+  connect_bd_intf_net -intf_net ref_openflow_core_0_m_axis_s2mm_2 [get_bd_intf_pins eth2dma_intercon_0/s_rxd2_axis] [get_bd_intf_pins ref_openflow_core_0/m_axis_s2mm_2]
+  connect_bd_intf_net -intf_net ref_openflow_core_0_m_axis_s2mm_3 [get_bd_intf_pins eth2dma_intercon_0/s_rxd3_axis] [get_bd_intf_pins ref_openflow_core_0/m_axis_s2mm_3]
+  connect_bd_intf_net -intf_net ref_openflow_core_0_m_axis_s2mm_sts_0 [get_bd_intf_pins eth2dma_intercon_0/s_rxs0_axis] [get_bd_intf_pins ref_openflow_core_0/m_axis_s2mm_sts_0]
+  connect_bd_intf_net -intf_net ref_openflow_core_0_m_axis_s2mm_sts_1 [get_bd_intf_pins eth2dma_intercon_0/s_rxs1_axis] [get_bd_intf_pins ref_openflow_core_0/m_axis_s2mm_sts_1]
+  connect_bd_intf_net -intf_net ref_openflow_core_0_m_axis_s2mm_sts_2 [get_bd_intf_pins eth2dma_intercon_0/s_rxs2_axis] [get_bd_intf_pins ref_openflow_core_0/m_axis_s2mm_sts_2]
+  connect_bd_intf_net -intf_net ref_openflow_core_0_m_axis_s2mm_sts_3 [get_bd_intf_pins eth2dma_intercon_0/s_rxs3_axis] [get_bd_intf_pins ref_openflow_core_0/m_axis_s2mm_sts_3]
+  connect_bd_intf_net -intf_net ref_openflow_core_0_m_axis_txd_2 [get_bd_intf_pins axi_ethernet_2/s_axis_txd] [get_bd_intf_pins ref_openflow_core_0/m_axis_txd_2]
+  connect_bd_intf_net -intf_net s_axis_txc_1 [get_bd_intf_pins axi_ethernet_0/s_axis_txc] [get_bd_intf_pins ref_openflow_core_0/m_axis_txc_0]
+  connect_bd_intf_net -intf_net s_axis_txc_2 [get_bd_intf_pins axi_ethernet_1/s_axis_txc] [get_bd_intf_pins ref_openflow_core_0/m_axis_txc_1]
+  connect_bd_intf_net -intf_net s_axis_txc_3 [get_bd_intf_pins axi_ethernet_2/s_axis_txc] [get_bd_intf_pins ref_openflow_core_0/m_axis_txc_2]
+  connect_bd_intf_net -intf_net s_axis_txc_4 [get_bd_intf_pins axi_ethernet_3/s_axis_txc] [get_bd_intf_pins ref_openflow_core_0/m_axis_txc_3]
+  connect_bd_intf_net -intf_net s_axis_txd_1 [get_bd_intf_pins axi_ethernet_0/s_axis_txd] [get_bd_intf_pins ref_openflow_core_0/m_axis_txd_0]
+  connect_bd_intf_net -intf_net s_axis_txd_2 [get_bd_intf_pins axi_ethernet_1/s_axis_txd] [get_bd_intf_pins ref_openflow_core_0/m_axis_txd_1]
+  connect_bd_intf_net -intf_net s_axis_txd_3 [get_bd_intf_pins axi_ethernet_3/s_axis_txd] [get_bd_intf_pins ref_openflow_core_0/m_axis_txd_3]
 
   # Create port connections
   connect_bd_net -net axi_dma_0_mm2s_cntrl_reset_out_n [get_bd_pins axi_dma_0/mm2s_cntrl_reset_out_n] [get_bd_pins axi_ethernet_0/axi_txc_arstn]
   connect_bd_net -net axi_dma_0_mm2s_introut [get_bd_pins axi_dma_0/mm2s_introut] [get_bd_pins xlconcat_0/In4]
-  connect_bd_net -net axi_dma_0_mm2s_prmry_reset_out_n [get_bd_pins axi_dma_0/mm2s_prmry_reset_out_n] [get_bd_pins axi_ethernet_0/axi_txd_arstn]
+  connect_bd_net -net axi_dma_0_mm2s_prmry_reset_out_n [get_bd_pins axi_dma_0/mm2s_prmry_reset_out_n] [get_bd_pins axi_ethernet_0/axi_txd_arstn] [get_bd_pins axi_ethernet_2/axi_rxd_arstn] [get_bd_pins axi_ethernet_2/axi_rxs_arstn] [get_bd_pins axi_ethernet_2/axi_txc_arstn] [get_bd_pins axi_ethernet_2/axi_txd_arstn]
   connect_bd_net -net axi_dma_0_s2mm_introut [get_bd_pins axi_dma_0/s2mm_introut] [get_bd_pins xlconcat_0/In5]
   connect_bd_net -net axi_dma_0_s2mm_prmry_reset_out_n [get_bd_pins axi_dma_0/s2mm_prmry_reset_out_n] [get_bd_pins axi_ethernet_0/axi_rxd_arstn]
   connect_bd_net -net axi_dma_0_s2mm_sts_reset_out_n [get_bd_pins axi_dma_0/s2mm_sts_reset_out_n] [get_bd_pins axi_ethernet_0/axi_rxs_arstn]
-  connect_bd_net -net axi_dma_1_mm2s_cntrl_reset_out_n [get_bd_pins axi_dma_1/mm2s_cntrl_reset_out_n] [get_bd_pins axi_ethernet_1/axi_txc_arstn]
-  connect_bd_net -net axi_dma_1_mm2s_introut [get_bd_pins axi_dma_1/mm2s_introut] [get_bd_pins xlconcat_0/In6]
-  connect_bd_net -net axi_dma_1_mm2s_prmry_reset_out_n [get_bd_pins axi_dma_1/mm2s_prmry_reset_out_n] [get_bd_pins axi_ethernet_1/axi_txd_arstn]
-  connect_bd_net -net axi_dma_1_s2mm_introut [get_bd_pins axi_dma_1/s2mm_introut] [get_bd_pins xlconcat_0/In7]
-  connect_bd_net -net axi_dma_1_s2mm_prmry_reset_out_n [get_bd_pins axi_dma_1/s2mm_prmry_reset_out_n] [get_bd_pins axi_ethernet_1/axi_rxd_arstn]
-  connect_bd_net -net axi_dma_1_s2mm_sts_reset_out_n [get_bd_pins axi_dma_1/s2mm_sts_reset_out_n] [get_bd_pins axi_ethernet_1/axi_rxs_arstn]
-  connect_bd_net -net axi_dma_2_mm2s_cntrl_reset_out_n [get_bd_pins axi_dma_2/mm2s_cntrl_reset_out_n] [get_bd_pins axi_ethernet_2/axi_txc_arstn]
-  connect_bd_net -net axi_dma_2_mm2s_introut [get_bd_pins axi_dma_2/mm2s_introut] [get_bd_pins xlconcat_0/In8]
-  connect_bd_net -net axi_dma_2_mm2s_prmry_reset_out_n [get_bd_pins axi_dma_2/mm2s_prmry_reset_out_n] [get_bd_pins axi_ethernet_2/axi_txd_arstn]
-  connect_bd_net -net axi_dma_2_s2mm_introut [get_bd_pins axi_dma_2/s2mm_introut] [get_bd_pins xlconcat_0/In9]
-  connect_bd_net -net axi_dma_2_s2mm_prmry_reset_out_n [get_bd_pins axi_dma_2/s2mm_prmry_reset_out_n] [get_bd_pins axi_ethernet_2/axi_rxd_arstn]
-  connect_bd_net -net axi_dma_2_s2mm_sts_reset_out_n [get_bd_pins axi_dma_2/s2mm_sts_reset_out_n] [get_bd_pins axi_ethernet_2/axi_rxs_arstn]
-  connect_bd_net -net axi_dma_3_mm2s_cntrl_reset_out_n [get_bd_pins axi_dma_3/mm2s_cntrl_reset_out_n] [get_bd_pins axi_ethernet_3/axi_txc_arstn]
-  connect_bd_net -net axi_dma_3_mm2s_introut [get_bd_pins axi_dma_3/mm2s_introut] [get_bd_pins xlconcat_0/In10]
-  connect_bd_net -net axi_dma_3_mm2s_prmry_reset_out_n [get_bd_pins axi_dma_3/mm2s_prmry_reset_out_n] [get_bd_pins axi_ethernet_3/axi_txd_arstn]
-  connect_bd_net -net axi_dma_3_s2mm_introut [get_bd_pins axi_dma_3/s2mm_introut] [get_bd_pins xlconcat_0/In11]
-  connect_bd_net -net axi_dma_3_s2mm_prmry_reset_out_n [get_bd_pins axi_dma_3/s2mm_prmry_reset_out_n] [get_bd_pins axi_ethernet_3/axi_rxd_arstn]
-  connect_bd_net -net axi_dma_3_s2mm_sts_reset_out_n [get_bd_pins axi_dma_3/s2mm_sts_reset_out_n] [get_bd_pins axi_ethernet_3/axi_rxs_arstn]
   connect_bd_net -net axi_ethernet_0_clk104_out [get_bd_pins axi_ethernet_0/clk104_out] [get_bd_pins axi_ethernet_1/clk104] [get_bd_pins axi_ethernet_2/clk104] [get_bd_pins axi_ethernet_3/clk104]
   connect_bd_net -net axi_ethernet_0_clk125_out [get_bd_pins axi_ethernet_0/clk125_out] [get_bd_pins axi_ethernet_1/clk125m] [get_bd_pins axi_ethernet_2/clk125m] [get_bd_pins axi_ethernet_3/clk125m]
   connect_bd_net -net axi_ethernet_0_clk208_out [get_bd_pins axi_ethernet_0/clk208_out] [get_bd_pins axi_ethernet_1/clk208] [get_bd_pins axi_ethernet_2/clk208] [get_bd_pins axi_ethernet_3/clk208]
@@ -300,9 +268,9 @@ proc create_root_design { parentCell } {
   connect_bd_net -net const_gnd_const [get_bd_pins axi_ethernet_1/rst_125] [get_bd_pins axi_ethernet_2/rst_125] [get_bd_pins axi_ethernet_3/rst_125] [get_bd_pins const_gnd/const]
   connect_bd_net -net const_vcc_const [get_bd_pins axi_ethernet_0/signal_detect] [get_bd_pins axi_ethernet_1/mdio_mdio_i] [get_bd_pins axi_ethernet_1/mmcm_locked] [get_bd_pins axi_ethernet_1/signal_detect] [get_bd_pins axi_ethernet_2/mdio_mdio_i] [get_bd_pins axi_ethernet_2/mmcm_locked] [get_bd_pins axi_ethernet_2/signal_detect] [get_bd_pins axi_ethernet_3/mdio_mdio_i] [get_bd_pins axi_ethernet_3/mmcm_locked] [get_bd_pins axi_ethernet_3/signal_detect] [get_bd_pins const_vcc/const] [get_bd_pins proc_sys_reset_0/dcm_locked]
   connect_bd_net -net ext_reset_in_1 [get_bd_ports ext_rst] [get_bd_pins proc_sys_reset_0/ext_reset_in]
-  connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_ports bd_aresetn] [get_bd_pins axi_dma_0/axi_resetn] [get_bd_pins axi_dma_1/axi_resetn] [get_bd_pins axi_dma_2/axi_resetn] [get_bd_pins axi_dma_3/axi_resetn] [get_bd_pins axi_ethernet_0/s_axi_lite_resetn] [get_bd_pins axi_ethernet_1/s_axi_lite_resetn] [get_bd_pins axi_ethernet_2/s_axi_lite_resetn] [get_bd_pins axi_ethernet_3/s_axi_lite_resetn] [get_bd_pins axi_interc_gp/ARESETN] [get_bd_pins axi_interc_gp/M00_ARESETN] [get_bd_pins axi_interc_gp/M01_ARESETN] [get_bd_pins axi_interc_gp/M02_ARESETN] [get_bd_pins axi_interc_gp/M03_ARESETN] [get_bd_pins axi_interc_gp/M04_ARESETN] [get_bd_pins axi_interc_gp/M05_ARESETN] [get_bd_pins axi_interc_gp/M06_ARESETN] [get_bd_pins axi_interc_gp/M07_ARESETN] [get_bd_pins axi_interc_gp/M08_ARESETN] [get_bd_pins axi_interc_gp/S00_ARESETN] [get_bd_pins axi_interc_hp/ARESETN] [get_bd_pins axi_interc_hp/M00_ARESETN] [get_bd_pins axi_interc_hp/S00_ARESETN] [get_bd_pins axi_interc_hp/S01_ARESETN] [get_bd_pins axi_interc_hp/S02_ARESETN] [get_bd_pins axi_interc_hp/S03_ARESETN] [get_bd_pins axi_interc_hp/S04_ARESETN] [get_bd_pins axi_interc_hp/S05_ARESETN] [get_bd_pins axi_interc_hp/S06_ARESETN] [get_bd_pins axi_interc_hp/S07_ARESETN] [get_bd_pins axi_interc_hp/S08_ARESETN] [get_bd_pins axi_interc_hp/S09_ARESETN] [get_bd_pins axi_interc_hp/S10_ARESETN] [get_bd_pins axi_interc_hp/S11_ARESETN] [get_bd_pins packet_pipeline_0/s_axi_lite_aresetn] [get_bd_pins packet_pipeline_0/s_axis_mm2s_aresetn] [get_bd_pins packet_pipeline_0/s_axis_rxd_aresetn] [get_bd_pins packet_pipeline_0/s_axis_s2mm_aresetn] [get_bd_pins packet_pipeline_0/s_axis_txd_aresetn] [get_bd_pins proc_sys_reset_0/peripheral_aresetn]
-  connect_bd_net -net processing_system7_0_FCLK_CLK0 [get_bd_ports bd_fclk0_125m] [get_bd_pins axi_dma_0/m_axi_mm2s_aclk] [get_bd_pins axi_dma_0/m_axi_s2mm_aclk] [get_bd_pins axi_dma_0/m_axi_sg_aclk] [get_bd_pins axi_dma_1/m_axi_mm2s_aclk] [get_bd_pins axi_dma_1/m_axi_s2mm_aclk] [get_bd_pins axi_dma_1/m_axi_sg_aclk] [get_bd_pins axi_dma_2/m_axi_mm2s_aclk] [get_bd_pins axi_dma_2/m_axi_s2mm_aclk] [get_bd_pins axi_dma_2/m_axi_sg_aclk] [get_bd_pins axi_dma_3/m_axi_mm2s_aclk] [get_bd_pins axi_dma_3/m_axi_s2mm_aclk] [get_bd_pins axi_dma_3/m_axi_sg_aclk] [get_bd_pins axi_ethernet_0/axis_clk] [get_bd_pins axi_ethernet_1/axis_clk] [get_bd_pins axi_ethernet_2/axis_clk] [get_bd_pins axi_ethernet_3/axis_clk] [get_bd_pins axi_interc_hp/ACLK] [get_bd_pins axi_interc_hp/M00_ACLK] [get_bd_pins axi_interc_hp/S00_ACLK] [get_bd_pins axi_interc_hp/S01_ACLK] [get_bd_pins axi_interc_hp/S02_ACLK] [get_bd_pins axi_interc_hp/S03_ACLK] [get_bd_pins axi_interc_hp/S04_ACLK] [get_bd_pins axi_interc_hp/S05_ACLK] [get_bd_pins axi_interc_hp/S06_ACLK] [get_bd_pins axi_interc_hp/S07_ACLK] [get_bd_pins axi_interc_hp/S08_ACLK] [get_bd_pins axi_interc_hp/S09_ACLK] [get_bd_pins axi_interc_hp/S10_ACLK] [get_bd_pins axi_interc_hp/S11_ACLK] [get_bd_pins packet_pipeline_0/s_axis_mm2s_aclk] [get_bd_pins packet_pipeline_0/s_axis_rxd_aclk] [get_bd_pins packet_pipeline_0/s_axis_s2mm_aclk] [get_bd_pins packet_pipeline_0/s_axis_txd_aclk] [get_bd_pins processing_system7_0/FCLK_CLK0] [get_bd_pins processing_system7_0/S_AXI_HP0_ACLK]
-  connect_bd_net -net processing_system7_0_FCLK_CLK1 [get_bd_ports bd_fclk1_75m] [get_bd_pins axi_dma_0/s_axi_lite_aclk] [get_bd_pins axi_dma_1/s_axi_lite_aclk] [get_bd_pins axi_dma_2/s_axi_lite_aclk] [get_bd_pins axi_dma_3/s_axi_lite_aclk] [get_bd_pins axi_ethernet_0/s_axi_lite_clk] [get_bd_pins axi_ethernet_1/s_axi_lite_clk] [get_bd_pins axi_ethernet_2/s_axi_lite_clk] [get_bd_pins axi_ethernet_3/s_axi_lite_clk] [get_bd_pins axi_interc_gp/ACLK] [get_bd_pins axi_interc_gp/M00_ACLK] [get_bd_pins axi_interc_gp/M01_ACLK] [get_bd_pins axi_interc_gp/M02_ACLK] [get_bd_pins axi_interc_gp/M03_ACLK] [get_bd_pins axi_interc_gp/M04_ACLK] [get_bd_pins axi_interc_gp/M05_ACLK] [get_bd_pins axi_interc_gp/M06_ACLK] [get_bd_pins axi_interc_gp/M07_ACLK] [get_bd_pins axi_interc_gp/M08_ACLK] [get_bd_pins axi_interc_gp/S00_ACLK] [get_bd_pins packet_pipeline_0/s_axi_lite_aclk] [get_bd_pins proc_sys_reset_0/slowest_sync_clk] [get_bd_pins processing_system7_0/FCLK_CLK1] [get_bd_pins processing_system7_0/M_AXI_GP0_ACLK]
+  connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_ports bd_aresetn] [get_bd_pins axi_dma_0/axi_resetn] [get_bd_pins axi_ethernet_0/s_axi_lite_resetn] [get_bd_pins axi_ethernet_1/axi_rxd_arstn] [get_bd_pins axi_ethernet_1/axi_rxs_arstn] [get_bd_pins axi_ethernet_1/axi_txc_arstn] [get_bd_pins axi_ethernet_1/axi_txd_arstn] [get_bd_pins axi_ethernet_1/s_axi_lite_resetn] [get_bd_pins axi_ethernet_2/s_axi_lite_resetn] [get_bd_pins axi_ethernet_3/axi_rxd_arstn] [get_bd_pins axi_ethernet_3/axi_rxs_arstn] [get_bd_pins axi_ethernet_3/axi_txc_arstn] [get_bd_pins axi_ethernet_3/axi_txd_arstn] [get_bd_pins axi_ethernet_3/s_axi_lite_resetn] [get_bd_pins axi_interc_gp/ARESETN] [get_bd_pins axi_interc_gp/M00_ARESETN] [get_bd_pins axi_interc_gp/M01_ARESETN] [get_bd_pins axi_interc_gp/M02_ARESETN] [get_bd_pins axi_interc_gp/M03_ARESETN] [get_bd_pins axi_interc_gp/M04_ARESETN] [get_bd_pins axi_interc_gp/M05_ARESETN] [get_bd_pins axi_interc_gp/S00_ARESETN] [get_bd_pins axi_interc_hp/ARESETN] [get_bd_pins axi_interc_hp/M00_ARESETN] [get_bd_pins axi_interc_hp/S00_ARESETN] [get_bd_pins axi_interc_hp/S01_ARESETN] [get_bd_pins axi_interc_hp/S02_ARESETN] [get_bd_pins dma2eth_intercon_0/aresetn] [get_bd_pins eth2dma_intercon_0/aresetn] [get_bd_pins proc_sys_reset_0/peripheral_aresetn] [get_bd_pins ref_openflow_core_0/s_axi_lite_aresetn] [get_bd_pins ref_openflow_core_0/s_axis_mm2s_aresetn] [get_bd_pins ref_openflow_core_0/s_axis_rxd_aresetn] [get_bd_pins ref_openflow_core_0/s_axis_s2mm_aresetn] [get_bd_pins ref_openflow_core_0/s_axis_txd_aresetn]
+  connect_bd_net -net processing_system7_0_FCLK_CLK0 [get_bd_ports bd_fclk0_125m] [get_bd_pins axi_dma_0/m_axi_mm2s_aclk] [get_bd_pins axi_dma_0/m_axi_s2mm_aclk] [get_bd_pins axi_dma_0/m_axi_sg_aclk] [get_bd_pins axi_ethernet_0/axis_clk] [get_bd_pins axi_ethernet_1/axis_clk] [get_bd_pins axi_ethernet_2/axis_clk] [get_bd_pins axi_ethernet_3/axis_clk] [get_bd_pins axi_interc_hp/ACLK] [get_bd_pins axi_interc_hp/M00_ACLK] [get_bd_pins axi_interc_hp/S00_ACLK] [get_bd_pins axi_interc_hp/S01_ACLK] [get_bd_pins axi_interc_hp/S02_ACLK] [get_bd_pins dma2eth_intercon_0/aclk] [get_bd_pins eth2dma_intercon_0/aclk] [get_bd_pins processing_system7_0/FCLK_CLK0] [get_bd_pins processing_system7_0/S_AXI_HP0_ACLK] [get_bd_pins ref_openflow_core_0/s_axis_mm2s_aclk] [get_bd_pins ref_openflow_core_0/s_axis_rxd_aclk] [get_bd_pins ref_openflow_core_0/s_axis_s2mm_aclk] [get_bd_pins ref_openflow_core_0/s_axis_txd_aclk]
+  connect_bd_net -net processing_system7_0_FCLK_CLK1 [get_bd_ports bd_fclk1_75m] [get_bd_pins axi_dma_0/s_axi_lite_aclk] [get_bd_pins axi_ethernet_0/s_axi_lite_clk] [get_bd_pins axi_ethernet_1/s_axi_lite_clk] [get_bd_pins axi_ethernet_2/s_axi_lite_clk] [get_bd_pins axi_ethernet_3/s_axi_lite_clk] [get_bd_pins axi_interc_gp/ACLK] [get_bd_pins axi_interc_gp/M00_ACLK] [get_bd_pins axi_interc_gp/M01_ACLK] [get_bd_pins axi_interc_gp/M02_ACLK] [get_bd_pins axi_interc_gp/M03_ACLK] [get_bd_pins axi_interc_gp/M04_ACLK] [get_bd_pins axi_interc_gp/M05_ACLK] [get_bd_pins axi_interc_gp/S00_ACLK] [get_bd_pins proc_sys_reset_0/slowest_sync_clk] [get_bd_pins processing_system7_0/FCLK_CLK1] [get_bd_pins processing_system7_0/M_AXI_GP0_ACLK] [get_bd_pins ref_openflow_core_0/s_axi_lite_aclk]
   connect_bd_net -net processing_system7_0_FCLK_CLK2 [get_bd_ports bd_fclk2_200m] [get_bd_pins processing_system7_0/FCLK_CLK2]
   connect_bd_net -net processing_system7_0_FCLK_RESET0_N [get_bd_pins proc_sys_reset_0/aux_reset_in] [get_bd_pins processing_system7_0/FCLK_RESET0_N]
   connect_bd_net -net ref_clk_125_n_1 [get_bd_ports ref_clk_125_n] [get_bd_pins axi_ethernet_0/ref_clk_125_n]
@@ -313,28 +281,16 @@ proc create_root_design { parentCell } {
   create_bd_addr_seg -range 0x40000000 -offset 0x0 [get_bd_addr_spaces axi_dma_0/Data_SG] [get_bd_addr_segs processing_system7_0/S_AXI_HP0/HP0_DDR_LOWOCM] SEG_processing_system7_0_HP0_DDR_LOWOCM
   create_bd_addr_seg -range 0x40000000 -offset 0x0 [get_bd_addr_spaces axi_dma_0/Data_MM2S] [get_bd_addr_segs processing_system7_0/S_AXI_HP0/HP0_DDR_LOWOCM] SEG_processing_system7_0_HP0_DDR_LOWOCM
   create_bd_addr_seg -range 0x40000000 -offset 0x0 [get_bd_addr_spaces axi_dma_0/Data_S2MM] [get_bd_addr_segs processing_system7_0/S_AXI_HP0/HP0_DDR_LOWOCM] SEG_processing_system7_0_HP0_DDR_LOWOCM
-  create_bd_addr_seg -range 0x40000000 -offset 0x0 [get_bd_addr_spaces axi_dma_1/Data_SG] [get_bd_addr_segs processing_system7_0/S_AXI_HP0/HP0_DDR_LOWOCM] SEG_processing_system7_0_HP0_DDR_LOWOCM
-  create_bd_addr_seg -range 0x40000000 -offset 0x0 [get_bd_addr_spaces axi_dma_1/Data_MM2S] [get_bd_addr_segs processing_system7_0/S_AXI_HP0/HP0_DDR_LOWOCM] SEG_processing_system7_0_HP0_DDR_LOWOCM
-  create_bd_addr_seg -range 0x40000000 -offset 0x0 [get_bd_addr_spaces axi_dma_1/Data_S2MM] [get_bd_addr_segs processing_system7_0/S_AXI_HP0/HP0_DDR_LOWOCM] SEG_processing_system7_0_HP0_DDR_LOWOCM
-  create_bd_addr_seg -range 0x40000000 -offset 0x0 [get_bd_addr_spaces axi_dma_2/Data_SG] [get_bd_addr_segs processing_system7_0/S_AXI_HP0/HP0_DDR_LOWOCM] SEG_processing_system7_0_HP0_DDR_LOWOCM
-  create_bd_addr_seg -range 0x40000000 -offset 0x0 [get_bd_addr_spaces axi_dma_2/Data_MM2S] [get_bd_addr_segs processing_system7_0/S_AXI_HP0/HP0_DDR_LOWOCM] SEG_processing_system7_0_HP0_DDR_LOWOCM
-  create_bd_addr_seg -range 0x40000000 -offset 0x0 [get_bd_addr_spaces axi_dma_2/Data_S2MM] [get_bd_addr_segs processing_system7_0/S_AXI_HP0/HP0_DDR_LOWOCM] SEG_processing_system7_0_HP0_DDR_LOWOCM
-  create_bd_addr_seg -range 0x40000000 -offset 0x0 [get_bd_addr_spaces axi_dma_3/Data_SG] [get_bd_addr_segs processing_system7_0/S_AXI_HP0/HP0_DDR_LOWOCM] SEG_processing_system7_0_HP0_DDR_LOWOCM
-  create_bd_addr_seg -range 0x40000000 -offset 0x0 [get_bd_addr_spaces axi_dma_3/Data_MM2S] [get_bd_addr_segs processing_system7_0/S_AXI_HP0/HP0_DDR_LOWOCM] SEG_processing_system7_0_HP0_DDR_LOWOCM
-  create_bd_addr_seg -range 0x40000000 -offset 0x0 [get_bd_addr_spaces axi_dma_3/Data_S2MM] [get_bd_addr_segs processing_system7_0/S_AXI_HP0/HP0_DDR_LOWOCM] SEG_processing_system7_0_HP0_DDR_LOWOCM
   create_bd_addr_seg -range 0x1000 -offset 0x0 [get_bd_addr_spaces axi_ethernet_0/eth_buf/S_AXI_2TEMAC] [get_bd_addr_segs axi_ethernet_0/eth_mac/s_axi/Reg] SEG_eth_mac_Reg
   create_bd_addr_seg -range 0x1000 -offset 0x0 [get_bd_addr_spaces axi_ethernet_1/eth_buf/S_AXI_2TEMAC] [get_bd_addr_segs axi_ethernet_1/eth_mac/s_axi/Reg] SEG_eth_mac_Reg
   create_bd_addr_seg -range 0x1000 -offset 0x0 [get_bd_addr_spaces axi_ethernet_2/eth_buf/S_AXI_2TEMAC] [get_bd_addr_segs axi_ethernet_2/eth_mac/s_axi/Reg] SEG_eth_mac_Reg
   create_bd_addr_seg -range 0x1000 -offset 0x0 [get_bd_addr_spaces axi_ethernet_3/eth_buf/S_AXI_2TEMAC] [get_bd_addr_segs axi_ethernet_3/eth_mac/s_axi/Reg] SEG_eth_mac_Reg
   create_bd_addr_seg -range 0x10000 -offset 0x40400000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs axi_dma_0/S_AXI_LITE/Reg] SEG_axi_dma_0_Reg
-  create_bd_addr_seg -range 0x10000 -offset 0x40410000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs axi_dma_1/S_AXI_LITE/Reg] SEG_axi_dma_1_Reg
-  create_bd_addr_seg -range 0x10000 -offset 0x40420000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs axi_dma_2/S_AXI_LITE/Reg] SEG_axi_dma_2_Reg
-  create_bd_addr_seg -range 0x10000 -offset 0x40430000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs axi_dma_3/S_AXI_LITE/Reg] SEG_axi_dma_3_Reg
   create_bd_addr_seg -range 0x40000 -offset 0x43C00000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs axi_ethernet_0/eth_buf/S_AXI/REG] SEG_eth_buf_REG
   create_bd_addr_seg -range 0x40000 -offset 0x43C40000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs axi_ethernet_1/eth_buf/S_AXI/REG] SEG_eth_buf_REG2
   create_bd_addr_seg -range 0x40000 -offset 0x43C80000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs axi_ethernet_2/eth_buf/S_AXI/REG] SEG_eth_buf_REG4
   create_bd_addr_seg -range 0x40000 -offset 0x43CC0000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs axi_ethernet_3/eth_buf/S_AXI/REG] SEG_eth_buf_REG6
-  create_bd_addr_seg -range 0x8000000 -offset 0x48000000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs packet_pipeline_0/s_axi_lite/reg0] SEG_packet_pipeline_0_reg0
+  create_bd_addr_seg -range 0x8000000 -offset 0x48000000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs ref_openflow_core_0/s_axi_lite/reg0] SEG_ref_openflow_core_0_reg0
   
 
   # Restore current instance

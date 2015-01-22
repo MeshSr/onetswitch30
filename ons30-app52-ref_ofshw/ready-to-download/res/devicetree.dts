@@ -76,7 +76,7 @@
 		#size-cells = <1>;
 		compatible = "xlnx,ps7-axi-interconnect-1.00.a", "simple-bus";
 		ranges ;
-		axi_dma_0: axi-dma@40400000 {
+		axi_dma: axi-dma@40400000 {
 			axistream-connected = <&axi_ethernet_0_eth_buf>;
 			axistream-control-connected = <&axi_ethernet_0_eth_buf>;
 			compatible = "xlnx,axi-dma-7.1", "xlnx,axi-dma-1.00.a";
@@ -102,87 +102,9 @@
 			xlnx,sg-length-width = <0xe>;
 			xlnx,sg-use-stsapp-length = <0x0>;
 		} ;
-		axi_dma_1: axi-dma@40410000 {
-			axistream-connected = <&axi_ethernet_1_eth_buf>;
-			axistream-control-connected = <&axi_ethernet_1_eth_buf>;
-			compatible = "xlnx,axi-dma-7.1", "xlnx,axi-dma-1.00.a";
-			interrupt-parent = <&ps7_scugic_0>;
-			interrupts = <0 53 4>, <0 52 4>;
-			reg = <0x40410000 0x10000>;
-			xlnx,dlytmr-resolution = <0x7d>;
-			xlnx,enable-multi-channel = <0x0>;
-			xlnx,include-mm2s = <0x1>;
-			xlnx,include-mm2s-dre = <0x0>;
-			xlnx,include-mm2s-sf = <0x1>;
-			xlnx,include-s2mm = <0x1>;
-			xlnx,include-s2mm-dre = <0x0>;
-			xlnx,include-s2mm-sf = <0x1>;
-			xlnx,include-sg = <0x1>;
-			xlnx,micro-dma = <0x0>;
-			xlnx,mm2s-burst-size = <0x10>;
-			xlnx,num-mm2s-channels = <0x1>;
-			xlnx,num-s2mm-channels = <0x1>;
-			xlnx,prmry-is-aclk-async = <0x0>;
-			xlnx,s2mm-burst-size = <0x10>;
-			xlnx,sg-include-stscntrl-strm = <0x1>;
-			xlnx,sg-length-width = <0xe>;
-			xlnx,sg-use-stsapp-length = <0x0>;
-		} ;
-		axi_dma_2: axi-dma@40420000 {
-			axistream-connected = <&axi_ethernet_2_eth_buf>;
-			axistream-control-connected = <&axi_ethernet_2_eth_buf>;
-			compatible = "xlnx,axi-dma-7.1", "xlnx,axi-dma-1.00.a";
-			interrupt-parent = <&ps7_scugic_0>;
-			interrupts = <0 36 4>, <0 35 4>;
-			reg = <0x40420000 0x10000>;
-			xlnx,dlytmr-resolution = <0x7d>;
-			xlnx,enable-multi-channel = <0x0>;
-			xlnx,include-mm2s = <0x1>;
-			xlnx,include-mm2s-dre = <0x0>;
-			xlnx,include-mm2s-sf = <0x1>;
-			xlnx,include-s2mm = <0x1>;
-			xlnx,include-s2mm-dre = <0x0>;
-			xlnx,include-s2mm-sf = <0x1>;
-			xlnx,include-sg = <0x1>;
-			xlnx,micro-dma = <0x0>;
-			xlnx,mm2s-burst-size = <0x10>;
-			xlnx,num-mm2s-channels = <0x1>;
-			xlnx,num-s2mm-channels = <0x1>;
-			xlnx,prmry-is-aclk-async = <0x0>;
-			xlnx,s2mm-burst-size = <0x10>;
-			xlnx,sg-include-stscntrl-strm = <0x1>;
-			xlnx,sg-length-width = <0xe>;
-			xlnx,sg-use-stsapp-length = <0x0>;
-		} ;
-		axi_dma_3: axi-dma@40430000 {
-			axistream-connected = <&axi_ethernet_3_eth_buf>;
-			axistream-control-connected = <&axi_ethernet_3_eth_buf>;
-			compatible = "xlnx,axi-dma-7.1", "xlnx,axi-dma-1.00.a";
-			interrupt-parent = <&ps7_scugic_0>;
-			interrupts = <0 34 4>, <0 33 4>;
-			reg = <0x40430000 0x10000>;
-			xlnx,dlytmr-resolution = <0x7d>;
-			xlnx,enable-multi-channel = <0x0>;
-			xlnx,include-mm2s = <0x1>;
-			xlnx,include-mm2s-dre = <0x0>;
-			xlnx,include-mm2s-sf = <0x1>;
-			xlnx,include-s2mm = <0x1>;
-			xlnx,include-s2mm-dre = <0x0>;
-			xlnx,include-s2mm-sf = <0x1>;
-			xlnx,include-sg = <0x1>;
-			xlnx,micro-dma = <0x0>;
-			xlnx,mm2s-burst-size = <0x10>;
-			xlnx,num-mm2s-channels = <0x1>;
-			xlnx,num-s2mm-channels = <0x1>;
-			xlnx,prmry-is-aclk-async = <0x0>;
-			xlnx,s2mm-burst-size = <0x10>;
-			xlnx,sg-include-stscntrl-strm = <0x1>;
-			xlnx,sg-length-width = <0xe>;
-			xlnx,sg-use-stsapp-length = <0x0>;
-		} ;
 		axi_ethernet_0_eth_buf: axi-ethernet@43c00000 {
-			axistream-connected = <&axi_dma_0>;
-			axistream-control-connected = <&axi_dma_0>;
+			axistream-connected = <&axi_dma>;
+			axistream-control-connected = <&axi_dma>;
 			clock-frequency = <125000000>;
 			compatible = "xlnx,axi-ethernet-buffer-2.0", "xlnx,axi-ethernet-1.00.a";
 			device_type = "network";
@@ -209,6 +131,7 @@
 			xlnx,txvlan-tag = <0x0>;
 			xlnx,txvlan-tran = <0x0>;
 			xlnx,type = <0x1>;
+			meshsr,dma_channel = <0x0>;
 			mdio {
 				#address-cells = <1>;
 				#size-cells = <0>;
@@ -235,8 +158,8 @@
 			} ;
 		} ;
 		axi_ethernet_1_eth_buf: axi-ethernet@43c40000 {
-			axistream-connected = <&axi_dma_1>;
-			axistream-control-connected = <&axi_dma_1>;
+			axistream-connected = <&axi_dma>;
+			axistream-control-connected = <&axi_dma>;
 			clock-frequency = <125000000>;
 			compatible = "xlnx,axi-ethernet-buffer-2.0", "xlnx,axi-ethernet-1.00.a";
 			device_type = "network";
@@ -263,10 +186,11 @@
 			xlnx,txvlan-tag = <0x0>;
 			xlnx,txvlan-tran = <0x0>;
 			xlnx,type = <0x1>;
+			meshsr,dma_channel = <0x1>;
 		} ;
 		axi_ethernet_2_eth_buf: axi-ethernet@43c80000 {
-			axistream-connected = <&axi_dma_2>;
-			axistream-control-connected = <&axi_dma_2>;
+			axistream-connected = <&axi_dma>;
+			axistream-control-connected = <&axi_dma>;
 			clock-frequency = <125000000>;
 			compatible = "xlnx,axi-ethernet-buffer-2.0", "xlnx,axi-ethernet-1.00.a";
 			device_type = "network";
@@ -293,10 +217,11 @@
 			xlnx,txvlan-tag = <0x0>;
 			xlnx,txvlan-tran = <0x0>;
 			xlnx,type = <0x1>;
+			meshsr,dma_channel = <0x2>;
 		} ;
 		axi_ethernet_3_eth_buf: axi-ethernet@43cc0000 {
-			axistream-connected = <&axi_dma_3>;
-			axistream-control-connected = <&axi_dma_3>;
+			axistream-connected = <&axi_dma>;
+			axistream-control-connected = <&axi_dma>;
 			clock-frequency = <125000000>;
 			compatible = "xlnx,axi-ethernet-buffer-2.0", "xlnx,axi-ethernet-1.00.a";
 			device_type = "network";
@@ -323,6 +248,7 @@
 			xlnx,txvlan-tag = <0x0>;
 			xlnx,txvlan-tran = <0x0>;
 			xlnx,type = <0x1>;
+			meshsr,dma_channel = <0x3>;
 		} ;
 		ps7_afi_0: ps7-afi@f8008000 {
 			compatible = "xlnx,ps7-afi-1.00.a";

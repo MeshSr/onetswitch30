@@ -19,7 +19,9 @@ set proj_constr_dir  "$proj_root/$proj_name/constrs"
 set proj_iprepo_dir  "$proj_root/ip-repo"
 
 set ip_list [list \
-   "packet_pipeline_v1_0"\
+   "ref_openflow_core"\
+   "dma2eth_intercon"\
+   "eth2dma_intercon"\
    ]
 
 set source_files [list \
@@ -27,8 +29,8 @@ set source_files [list \
    ]
 
 set constr_files [list \
-   "[file normalize "$proj_constr_dir/onetswitch_pins.xdc"]"\
    "[file normalize "$proj_constr_dir/onetswitch_top.xdc"]"\
+   "[file normalize "$proj_constr_dir/onetswitch_pins.xdc"]"\
    ]
 
 
@@ -123,7 +125,7 @@ set obj [get_runs impl_1]
 set_property "part" $proj_part $obj
 
 set_property used_in_synthesis false [get_files  $proj_root/$proj_name.srcs/constrs_1/imports/onetswitch_top.xdc]
-
+set_property used_in_synthesis false [get_files  $proj_root/$proj_name.srcs/constrs_1/imports/onetswitch_pins.xdc]
 
 
 puts "INFO: Project created."

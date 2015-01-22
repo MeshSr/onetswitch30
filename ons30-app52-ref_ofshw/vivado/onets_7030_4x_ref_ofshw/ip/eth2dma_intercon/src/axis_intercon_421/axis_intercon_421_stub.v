@@ -1,0 +1,69 @@
+// Copyright 1986-1999, 2001-2013 Xilinx, Inc. All Rights Reserved.
+// --------------------------------------------------------------------------------
+// Tool Version: Vivado v.2013.4 (win64) Build 353583 Mon Dec  9 17:49:19 MST 2013
+// Date        : Tue Jan 13 17:57:55 2015
+// Host        : USER-SS5ICG809G running 64-bit Service Pack 1  (build 7601)
+// Command     : write_verilog -force -mode synth_stub
+//               f:/onets_7030_4x_ref_ofshw/onets_7030_4x_ref_ofshw.srcs/sources_1/ip/axis_intercon_421/axis_intercon_421_stub.v
+// Design      : axis_intercon_421
+// Purpose     : Stub declaration of top-level module interface
+// Device      : xc7z030sbg485-2
+// --------------------------------------------------------------------------------
+
+// This empty module with port declaration file causes synthesis tools to infer a black box for IP.
+// The synthesis directives are for Synopsys Synplify support to prevent IO buffer insertion.
+// Please paste the declaration into a Verilog source file or add the file as an additional source.
+module axis_intercon_421(ACLK, ARESETN, S00_AXIS_ACLK, S01_AXIS_ACLK, S02_AXIS_ACLK, S03_AXIS_ACLK, S00_AXIS_ARESETN, S01_AXIS_ARESETN, S02_AXIS_ARESETN, S03_AXIS_ARESETN, S00_AXIS_TVALID, S01_AXIS_TVALID, S02_AXIS_TVALID, S03_AXIS_TVALID, S00_AXIS_TREADY, S01_AXIS_TREADY, S02_AXIS_TREADY, S03_AXIS_TREADY, S00_AXIS_TDATA, S01_AXIS_TDATA, S02_AXIS_TDATA, S03_AXIS_TDATA, S00_AXIS_TKEEP, S01_AXIS_TKEEP, S02_AXIS_TKEEP, S03_AXIS_TKEEP, S00_AXIS_TLAST, S01_AXIS_TLAST, S02_AXIS_TLAST, S03_AXIS_TLAST, S00_AXIS_TID, S01_AXIS_TID, S02_AXIS_TID, S03_AXIS_TID, M00_AXIS_ACLK, M00_AXIS_ARESETN, M00_AXIS_TVALID, M00_AXIS_TREADY, M00_AXIS_TDATA, M00_AXIS_TKEEP, M00_AXIS_TLAST, M00_AXIS_TID, S00_ARB_REQ_SUPPRESS, S01_ARB_REQ_SUPPRESS, S02_ARB_REQ_SUPPRESS, S03_ARB_REQ_SUPPRESS, S00_FIFO_DATA_COUNT, S01_FIFO_DATA_COUNT, S02_FIFO_DATA_COUNT, S03_FIFO_DATA_COUNT, M00_FIFO_DATA_COUNT)
+/* synthesis syn_black_box black_box_pad_pin="ACLK,ARESETN,S00_AXIS_ACLK,S01_AXIS_ACLK,S02_AXIS_ACLK,S03_AXIS_ACLK,S00_AXIS_ARESETN,S01_AXIS_ARESETN,S02_AXIS_ARESETN,S03_AXIS_ARESETN,S00_AXIS_TVALID,S01_AXIS_TVALID,S02_AXIS_TVALID,S03_AXIS_TVALID,S00_AXIS_TREADY,S01_AXIS_TREADY,S02_AXIS_TREADY,S03_AXIS_TREADY,S00_AXIS_TDATA[31:0],S01_AXIS_TDATA[31:0],S02_AXIS_TDATA[31:0],S03_AXIS_TDATA[31:0],S00_AXIS_TKEEP[3:0],S01_AXIS_TKEEP[3:0],S02_AXIS_TKEEP[3:0],S03_AXIS_TKEEP[3:0],S00_AXIS_TLAST,S01_AXIS_TLAST,S02_AXIS_TLAST,S03_AXIS_TLAST,S00_AXIS_TID[1:0],S01_AXIS_TID[1:0],S02_AXIS_TID[1:0],S03_AXIS_TID[1:0],M00_AXIS_ACLK,M00_AXIS_ARESETN,M00_AXIS_TVALID,M00_AXIS_TREADY,M00_AXIS_TDATA[31:0],M00_AXIS_TKEEP[3:0],M00_AXIS_TLAST,M00_AXIS_TID[1:0],S00_ARB_REQ_SUPPRESS,S01_ARB_REQ_SUPPRESS,S02_ARB_REQ_SUPPRESS,S03_ARB_REQ_SUPPRESS,S00_FIFO_DATA_COUNT[31:0],S01_FIFO_DATA_COUNT[31:0],S02_FIFO_DATA_COUNT[31:0],S03_FIFO_DATA_COUNT[31:0],M00_FIFO_DATA_COUNT[31:0]" */;
+  input ACLK;
+  input ARESETN;
+  input S00_AXIS_ACLK;
+  input S01_AXIS_ACLK;
+  input S02_AXIS_ACLK;
+  input S03_AXIS_ACLK;
+  input S00_AXIS_ARESETN;
+  input S01_AXIS_ARESETN;
+  input S02_AXIS_ARESETN;
+  input S03_AXIS_ARESETN;
+  input S00_AXIS_TVALID;
+  input S01_AXIS_TVALID;
+  input S02_AXIS_TVALID;
+  input S03_AXIS_TVALID;
+  output S00_AXIS_TREADY;
+  output S01_AXIS_TREADY;
+  output S02_AXIS_TREADY;
+  output S03_AXIS_TREADY;
+  input [31:0]S00_AXIS_TDATA;
+  input [31:0]S01_AXIS_TDATA;
+  input [31:0]S02_AXIS_TDATA;
+  input [31:0]S03_AXIS_TDATA;
+  input [3:0]S00_AXIS_TKEEP;
+  input [3:0]S01_AXIS_TKEEP;
+  input [3:0]S02_AXIS_TKEEP;
+  input [3:0]S03_AXIS_TKEEP;
+  input S00_AXIS_TLAST;
+  input S01_AXIS_TLAST;
+  input S02_AXIS_TLAST;
+  input S03_AXIS_TLAST;
+  input [1:0]S00_AXIS_TID;
+  input [1:0]S01_AXIS_TID;
+  input [1:0]S02_AXIS_TID;
+  input [1:0]S03_AXIS_TID;
+  input M00_AXIS_ACLK;
+  input M00_AXIS_ARESETN;
+  output M00_AXIS_TVALID;
+  input M00_AXIS_TREADY;
+  output [31:0]M00_AXIS_TDATA;
+  output [3:0]M00_AXIS_TKEEP;
+  output M00_AXIS_TLAST;
+  output [1:0]M00_AXIS_TID;
+  input S00_ARB_REQ_SUPPRESS;
+  input S01_ARB_REQ_SUPPRESS;
+  input S02_ARB_REQ_SUPPRESS;
+  input S03_ARB_REQ_SUPPRESS;
+  output [31:0]S00_FIFO_DATA_COUNT;
+  output [31:0]S01_FIFO_DATA_COUNT;
+  output [31:0]S02_FIFO_DATA_COUNT;
+  output [31:0]S03_FIFO_DATA_COUNT;
+  output [31:0]M00_FIFO_DATA_COUNT;
+endmodule
