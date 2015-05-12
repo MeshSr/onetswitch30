@@ -19,7 +19,7 @@ set proj_constr_dir  "$proj_root/$proj_name/constrs"
 set proj_iprepo_dir  "$proj_root/ip-repo"
 
 set ip_list [list \
-   "ref_openflow_core"\
+   "packet_pipeline_v1_0"\
    "dma2eth_intercon"\
    "eth2dma_intercon"\
    ]

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-switch_ip=10.0.0.10
+switch_ip=10.0.0.12
 gateway_ip=10.0.0.1
 controller_ip=10.0.0.1
 controller_port=6633
@@ -35,11 +35,11 @@ ifconfig eth2 down
 ifconfig eth3 down
 ifconfig eth4 down
 
-ifconfig eth0 hw ether 00:0a:35:00:15:00
-ifconfig eth1 hw ether 00:0a:35:01:15:01
-ifconfig eth2 hw ether 00:0a:35:01:15:02
-ifconfig eth3 hw ether 00:0a:35:01:15:03
-ifconfig eth4 hw ether 00:0a:35:01:15:04
+ifconfig eth0 hw ether 00:0a:35:00:12:00
+ifconfig eth1 hw ether 00:0a:35:01:12:01
+ifconfig eth2 hw ether 00:0a:35:01:12:02
+ifconfig eth3 hw ether 00:0a:35:01:12:03
+ifconfig eth4 hw ether 00:0a:35:01:12:04
 sleep 1
 
 ifconfig eth0 $switch_ip up
