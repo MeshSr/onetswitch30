@@ -28,10 +28,10 @@ module eth2dma_intercon
    input [1 : 0] s_rxs2_axis_tid,
    input [1 : 0] s_rxs3_axis_tid,*/
 
-   output m_rxs_axis_tvalid,
+   output reg m_rxs_axis_tvalid,
    input m_rxs_axis_tready,
    output reg [31 : 0] m_rxs_axis_tdata,
-   output [3 : 0] m_rxs_axis_tkeep,
+   output reg [3 : 0] m_rxs_axis_tkeep,
    output m_rxs_axis_tlast,
 //   output [1 : 0] m_rxs_axis_tid,
    
@@ -64,212 +64,192 @@ module eth2dma_intercon
    input m_rxd_axis_tready,
    output reg [31 : 0] m_rxd_axis_tdata,
    output reg [3 : 0] m_rxd_axis_tkeep,
-   output reg m_rxd_axis_tlast,
+   output m_rxd_axis_tlast,
    output reg [1 : 0] m_rxd_axis_tid
    
 );
-   wire [1:0] m_rxs_axis_tid;
-   wire [31 : 0] m_rxs_axis_tdata_i;
-   reg [1:0] m_rxs_axis_tid_r, m_rxs_axis_tid_r_nxt;
-   reg m_rxs_axis_tid_fifo_wr;
+   wire [3:0]   s_rxs_axis_tvalid;
+   reg [3:0]   s_rxs_axis_tready;
+   wire [31:0]  s_rxs_axis_tdata[3:0];
+   wire [3:0]   s_rxs_axis_tkeep[3:0];
+   wire [3:0]   s_rxs_axis_tlast;
    
-   reg [7:0] rxs_state, rxs_state_nxt;
-   localparam  RXS_IDLE = 1,
-               RXS_APP0 = 2,
-               RXS_APP_REST = 4;
-   localparam  CH0 = 2'b00,
-               CH1 = 2'b01,
-               CH2 = 2'b10,
-               CH3 = 2'b11;
-               
-	axis_intercon_421 axis_intercon_421 (
-      .ACLK                (aclk), 
-		.ARESETN             (aresetn), 
-		.S00_AXIS_ACLK       (aclk), 
-		.S01_AXIS_ACLK       (aclk), 
-		.S02_AXIS_ACLK       (aclk), 
-		.S03_AXIS_ACLK       (aclk), 
-		.S00_AXIS_ARESETN    (aresetn), 
-		.S01_AXIS_ARESETN    (aresetn), 
-		.S02_AXIS_ARESETN    (aresetn), 
-		.S03_AXIS_ARESETN    (aresetn), 
-		.S00_AXIS_TVALID     (s_rxs0_axis_tvalid), 
-		.S01_AXIS_TVALID     (s_rxs1_axis_tvalid), 
-		.S02_AXIS_TVALID     (s_rxs2_axis_tvalid), 
-		.S03_AXIS_TVALID     (s_rxs3_axis_tvalid), 
-		.S00_AXIS_TREADY     (s_rxs0_axis_tready), 
-		.S01_AXIS_TREADY     (s_rxs1_axis_tready), 
-		.S02_AXIS_TREADY     (s_rxs2_axis_tready), 
-		.S03_AXIS_TREADY     (s_rxs3_axis_tready), 
-		.S00_AXIS_TDATA      (s_rxs0_axis_tdata), 
-		.S01_AXIS_TDATA      (s_rxs1_axis_tdata), 
-		.S02_AXIS_TDATA      (s_rxs2_axis_tdata), 
-		.S03_AXIS_TDATA      (s_rxs3_axis_tdata), 
-		.S00_AXIS_TKEEP      (s_rxs0_axis_tkeep), 
-		.S01_AXIS_TKEEP      (s_rxs1_axis_tkeep), 
-		.S02_AXIS_TKEEP      (s_rxs2_axis_tkeep), 
-		.S03_AXIS_TKEEP      (s_rxs3_axis_tkeep), 
-		.S00_AXIS_TLAST      (s_rxs0_axis_tlast), 
-		.S01_AXIS_TLAST      (s_rxs1_axis_tlast), 
-		.S02_AXIS_TLAST      (s_rxs2_axis_tlast), 
-		.S03_AXIS_TLAST      (s_rxs3_axis_tlast), 
-		.S00_AXIS_TID        (CH0), 
-		.S01_AXIS_TID        (CH1), 
-		.S02_AXIS_TID        (CH2), 
-		.S03_AXIS_TID        (CH3), 
-		.M00_AXIS_ACLK       (aclk), 
-		.M00_AXIS_ARESETN    (aresetn), 
-		.M00_AXIS_TVALID     (m_rxs_axis_tvalid), 
-		.M00_AXIS_TREADY     (m_rxs_axis_tready), 
-		.M00_AXIS_TDATA      (m_rxs_axis_tdata_i), 
-		.M00_AXIS_TKEEP      (m_rxs_axis_tkeep), 
-		.M00_AXIS_TLAST      (m_rxs_axis_tlast), 
-		.M00_AXIS_TID        (m_rxs_axis_tid), 
-		.S00_ARB_REQ_SUPPRESS(0), 
-		.S01_ARB_REQ_SUPPRESS(0), 
-		.S02_ARB_REQ_SUPPRESS(0), 
-		.S03_ARB_REQ_SUPPRESS(0)
-	);
+   wire [3:0]   s_rxd_axis_tvalid;
+   reg [3:0]   s_rxd_axis_tready;
+   wire [31:0]  s_rxd_axis_tdata[3:0];
+   wire [3:0]   s_rxd_axis_tkeep[3:0];
+   wire [3:0]   s_rxd_axis_tlast;
+   
+   assign s_rxs_axis_tvalid[0]=s_rxs0_axis_tvalid;
+   assign s_rxs_axis_tvalid[1]=s_rxs1_axis_tvalid;
+   assign s_rxs_axis_tvalid[2]=s_rxs2_axis_tvalid;
+   assign s_rxs_axis_tvalid[3]=s_rxs3_axis_tvalid;
+   
+   assign s_rxs0_axis_tready=s_rxs_axis_tready[0];
+   assign s_rxs1_axis_tready=s_rxs_axis_tready[1];
+   assign s_rxs2_axis_tready=s_rxs_axis_tready[2];
+   assign s_rxs3_axis_tready=s_rxs_axis_tready[3];
+   
+   assign s_rxs_axis_tdata[0]=s_rxs0_axis_tdata;
+   assign s_rxs_axis_tdata[1]=s_rxs1_axis_tdata;
+   assign s_rxs_axis_tdata[2]=s_rxs2_axis_tdata;
+   assign s_rxs_axis_tdata[3]=s_rxs3_axis_tdata;
+   
+   assign s_rxs_axis_tlast[0]=s_rxs0_axis_tlast;
+   assign s_rxs_axis_tlast[1]=s_rxs1_axis_tlast;
+   assign s_rxs_axis_tlast[2]=s_rxs2_axis_tlast;
+   assign s_rxs_axis_tlast[3]=s_rxs3_axis_tlast;   
+   
+   assign s_rxs_axis_tkeep[0]=s_rxs0_axis_tkeep;
+   assign s_rxs_axis_tkeep[1]=s_rxs1_axis_tkeep;
+   assign s_rxs_axis_tkeep[2]=s_rxs2_axis_tkeep;
+   assign s_rxs_axis_tkeep[3]=s_rxs3_axis_tkeep;  
+   
+   
+      
+   
+   assign s_rxd_axis_tvalid[0]=s_rxd0_axis_tvalid;
+   assign s_rxd_axis_tvalid[1]=s_rxd1_axis_tvalid;
+   assign s_rxd_axis_tvalid[2]=s_rxd2_axis_tvalid;
+   assign s_rxd_axis_tvalid[3]=s_rxd3_axis_tvalid;
+   
+   assign s_rxd0_axis_tready=s_rxd_axis_tready[0];
+   assign s_rxd1_axis_tready=s_rxd_axis_tready[1];
+   assign s_rxd2_axis_tready=s_rxd_axis_tready[2];
+   assign s_rxd3_axis_tready=s_rxd_axis_tready[3];
+   
+   assign s_rxd_axis_tdata[0]=s_rxd0_axis_tdata;
+   assign s_rxd_axis_tdata[1]=s_rxd1_axis_tdata;
+   assign s_rxd_axis_tdata[2]=s_rxd2_axis_tdata;
+   assign s_rxd_axis_tdata[3]=s_rxd3_axis_tdata;
+   
+   assign s_rxd_axis_tlast[0]=s_rxd0_axis_tlast;
+   assign s_rxd_axis_tlast[1]=s_rxd1_axis_tlast;
+   assign s_rxd_axis_tlast[2]=s_rxd2_axis_tlast;
+   assign s_rxd_axis_tlast[3]=s_rxd3_axis_tlast;   
+   
+   assign s_rxd_axis_tkeep[0]=s_rxd0_axis_tkeep;
+   assign s_rxd_axis_tkeep[1]=s_rxd1_axis_tkeep;
+   assign s_rxd_axis_tkeep[2]=s_rxd2_axis_tkeep;
+   assign s_rxd_axis_tkeep[3]=s_rxd3_axis_tkeep;     
+   
+ 
+   
+   localparam  //IDLE=0,
+               WAIT_FOR_RXS=0,
+               WAIT_FOR_RXS_1=1,
+               WAIT_FOR_RXS_2=2,
+               WAIT_FOR_RXS_EOP=3,
+               WAIT_FOR_RXD=4,
+               WAIT_FOR_RXD_EOP=5,
+               ADD_QUEUE=6;
+   
+   reg [3:0]cur_st,nxt_st;
+   reg [1:0]cur_queue;
+   
+   always@(posedge aclk)
+      if(~aresetn)
+         cur_st<=0;
+      else cur_st<=nxt_st;
+      
+   always@(*)
+   begin
+      nxt_st=cur_st;
+      case(cur_st)
+         /*IDLE:
+            nxt_st=WAIT_FOR_RXS;*/
+         WAIT_FOR_RXS:
+            if(s_rxs_axis_tvalid[cur_queue]) nxt_st=WAIT_FOR_RXS_1;
+            else nxt_st=ADD_QUEUE;
+         WAIT_FOR_RXS_1:if(s_rxs_axis_tvalid[cur_queue]) nxt_st=WAIT_FOR_RXS_2;
+         WAIT_FOR_RXS_2:if(s_rxs_axis_tvalid[cur_queue]) nxt_st=WAIT_FOR_RXS_EOP;
+         WAIT_FOR_RXS_EOP:
+            if(s_rxs_axis_tlast[cur_queue]) nxt_st=WAIT_FOR_RXD;
+         WAIT_FOR_RXD:
+            if(s_rxd_axis_tvalid[cur_queue]) nxt_st=WAIT_FOR_RXD_EOP;
+         WAIT_FOR_RXD_EOP:
+            if(s_rxd_axis_tlast[cur_queue]) nxt_st=ADD_QUEUE;
+         ADD_QUEUE:
+            nxt_st=WAIT_FOR_RXS;
+         default:nxt_st=WAIT_FOR_RXS;
+      endcase
+   end
 
-   wire rxs_tid_fifo_full;
-   wire rxs_tid_fifo_empty;
-   wire [1:0] m_rxs_axis_tid_dout;
-   reg m_rxs_axis_tid_fifo_rd;
-   rxs_tid_fifo_8x16 rxs_tid_fifo(
-      .clk     (aclk),
-      .rst     (!aresetn),
-      .din     ({6'b0,m_rxs_axis_tid_r_nxt}),
-      .wr_en   (m_rxs_axis_tid_fifo_wr & !rxs_tid_fifo_full),
-      .rd_en   (m_rxs_axis_tid_fifo_rd),
-      .dout    (m_rxs_axis_tid_dout),
-      .full    (rxs_tid_fifo_full),
-      .empty   (rxs_tid_fifo_empty)
-   );
-   
-   //--------------------------------------
-   //rxs state machine
-   //--------------------------------------
-   always @(*) begin
-      if(!aresetn)begin
-         m_rxs_axis_tdata = 0;
-         rxs_state_nxt = 0;
-         m_rxs_axis_tid_r_nxt = 0;
-         m_rxs_axis_tid_fifo_wr = 0;
+   always@(posedge aclk)
+      if(~aresetn)
+         cur_queue<=0;
+      else if(cur_st==ADD_QUEUE)
+      begin
+         if(cur_queue==3)
+            cur_queue<=0;
+         else cur_queue<=cur_queue+1;
       end
-      else begin
-         rxs_state_nxt = rxs_state;
-         m_rxs_axis_tid_r_nxt = m_rxs_axis_tid_r;
-         m_rxs_axis_tdata = m_rxs_axis_tdata_i;
-         m_rxs_axis_tid_fifo_wr = 0;
-         
-         case(rxs_state)
-            RXS_IDLE: begin 
-               if(m_rxs_axis_tvalid && m_rxs_axis_tready) begin 
-                  m_rxs_axis_tid_r_nxt = m_rxs_axis_tid;
-                  m_rxs_axis_tid_fifo_wr = 1;
-                  rxs_state_nxt = RXS_APP0;
-               end
-            end
-            RXS_APP0: begin
-               m_rxs_axis_tdata[31:16] = m_rxs_axis_tid_r;
-               if(m_rxs_axis_tvalid && m_rxs_axis_tready)rxs_state_nxt = RXS_APP_REST;
-            end
-            RXS_APP_REST: begin
-               if(m_rxs_axis_tvalid && m_rxs_axis_tlast && m_rxs_axis_tready)rxs_state_nxt = RXS_IDLE;
-            end
-         endcase
+   
+   always@(*)
+   begin
+      s_rxs_axis_tready=0;
+      if(cur_st==WAIT_FOR_RXS_EOP | cur_st==WAIT_FOR_RXS_1 | cur_st==WAIT_FOR_RXS_2)
+         s_rxs_axis_tready[cur_queue]=m_rxs_axis_tready;
+   end
+   
+   always@(*)
+   begin
+      m_rxs_axis_tvalid=0;
+      if(cur_st==WAIT_FOR_RXS_EOP | cur_st==WAIT_FOR_RXS_1 | cur_st==WAIT_FOR_RXS_2)
+         m_rxs_axis_tvalid=s_rxs_axis_tvalid[cur_queue];
+   end
+   
+   always@(*)
+   begin
+      m_rxs_axis_tdata=0;
+      if(cur_st==WAIT_FOR_RXS_EOP | cur_st==WAIT_FOR_RXS_1)
+         m_rxs_axis_tdata=s_rxs_axis_tdata[cur_queue];
+      else if(cur_st==WAIT_FOR_RXS_2)
+      begin
+         m_rxs_axis_tdata[15:0]=s_rxs_axis_tdata[cur_queue][15:0];
+         m_rxs_axis_tdata[31:16]={14'h0,cur_queue};
       end
    end
    
-   always @(posedge aclk)begin
-      if(!aresetn)begin
-         rxs_state <= RXS_IDLE;
-         m_rxs_axis_tid_r <= 0;
-      end
-      else begin
-         rxs_state <= rxs_state_nxt;
-         m_rxs_axis_tid_r <= m_rxs_axis_tid_r_nxt;
-      end
+   always@(*)
+   begin
+      m_rxs_axis_tkeep=0;
+      if(cur_st==WAIT_FOR_RXS_EOP | cur_st==WAIT_FOR_RXS_1 | cur_st==WAIT_FOR_RXS_2)
+         m_rxs_axis_tkeep=s_rxd_axis_tkeep[cur_queue];
    end
    
-   //--------------------------------------
-   //rxd state machine
-   //--------------------------------------
    
-   wire [3:0] s_rxd_axis_tvalid;
-   wire [31:0] s_rxd_axis_tdata[3:0] ;
-   wire [3:0] s_rxd_axis_tkeep[3:0];
-   wire [3:0] s_rxd_axis_tlast;
-//   wire [1:0] s_rxd_axis_tid[3:0];
-   reg [3:0] s_rxd_axis_tready ;
+   assign m_rxs_axis_tlast=s_rxs_axis_tlast[cur_queue];
    
-   always @(*)begin
-      if(!aresetn) begin
-         m_rxd_axis_tvalid = 0;
-         m_rxd_axis_tdata = 0;
-         m_rxd_axis_tkeep = 0;
-         m_rxd_axis_tlast = 0;
-         m_rxd_axis_tid = 0;
-         s_rxd_axis_tready = 0;
-      end
-      else begin
-         m_rxd_axis_tvalid = 0;
-         m_rxd_axis_tdata = 0;
-         m_rxd_axis_tkeep = 0;
-         m_rxd_axis_tlast = 0;
-         m_rxd_axis_tid = 0;
-         s_rxd_axis_tready = 0;
-         if(!rxs_tid_fifo_empty)begin
-            m_rxd_axis_tvalid = s_rxd_axis_tvalid[m_rxs_axis_tid_dout];
-            m_rxd_axis_tdata = s_rxd_axis_tdata[m_rxs_axis_tid_dout];
-            m_rxd_axis_tkeep = s_rxd_axis_tkeep[m_rxs_axis_tid_dout];
-            m_rxd_axis_tlast = s_rxd_axis_tlast[m_rxs_axis_tid_dout];
-//            m_rxd_axis_tid = s_rxd_axis_tid[m_rxs_axis_tid_dout];
-            s_rxd_axis_tready[m_rxs_axis_tid_dout] = m_rxd_axis_tready;
-         end
-      end
+   always@(*)
+   begin
+      s_rxd_axis_tready=0;
+      if(cur_st==WAIT_FOR_RXD_EOP)
+         s_rxd_axis_tready[cur_queue]=m_rxd_axis_tready;
    end
    
-   always @(*) begin
-      if(!aresetn) begin
-         m_rxs_axis_tid_fifo_rd = 0;
-      end
-      else begin 
-         if(!rxs_tid_fifo_empty && m_rxd_axis_tlast && m_rxd_axis_tready)
-            m_rxs_axis_tid_fifo_rd = 1;
-         else m_rxs_axis_tid_fifo_rd = 0;
-      end
+   always@(*)
+   begin
+      m_rxd_axis_tvalid=0;
+      if(cur_st==WAIT_FOR_RXD_EOP)
+         m_rxd_axis_tvalid=s_rxd_axis_tvalid[cur_queue];
    end
-
-   assign s_rxd_axis_tvalid[0] = s_rxd0_axis_tvalid;
-   assign s_rxd_axis_tdata[0] = s_rxd0_axis_tdata;
-   assign s_rxd_axis_tkeep[0] = s_rxd0_axis_tkeep;
-   assign s_rxd_axis_tlast[0] = s_rxd0_axis_tlast;
-//   assign s_rxd_axis_tid[0] = s_rxd0_axis_tid;
-   assign s_rxd0_axis_tready = s_rxd_axis_tready[0];
    
-   assign s_rxd_axis_tvalid[1] = s_rxd1_axis_tvalid;
-   assign s_rxd_axis_tdata[1] = s_rxd1_axis_tdata;
-   assign s_rxd_axis_tkeep[1] = s_rxd1_axis_tkeep;
-   assign s_rxd_axis_tlast[1] = s_rxd1_axis_tlast;
-//   assign s_rxd_axis_tid[1] = s_rxd1_axis_tid;
-   assign s_rxd1_axis_tready = s_rxd_axis_tready[1];
+   always@(*)
+   begin
+      m_rxd_axis_tkeep=0;
+      if(cur_st==WAIT_FOR_RXD_EOP)
+         m_rxd_axis_tkeep=s_rxd_axis_tkeep[cur_queue];
+   end
    
-   assign s_rxd_axis_tvalid[2] = s_rxd2_axis_tvalid;
-   assign s_rxd_axis_tdata[2] = s_rxd2_axis_tdata;
-   assign s_rxd_axis_tkeep[2] = s_rxd2_axis_tkeep;
-   assign s_rxd_axis_tlast[2] = s_rxd2_axis_tlast;
-//   assign s_rxd_axis_tid[2] = s_rxd2_axis_tid;
-   assign s_rxd2_axis_tready = s_rxd_axis_tready[2];
+   always@(*)
+   begin
+      m_rxd_axis_tdata=0;
+      if(cur_st==WAIT_FOR_RXD_EOP) m_rxd_axis_tdata=s_rxd_axis_tdata[cur_queue];
+   end
    
-   assign s_rxd_axis_tvalid[3] = s_rxd3_axis_tvalid;
-   assign s_rxd_axis_tdata[3] = s_rxd3_axis_tdata;
-   assign s_rxd_axis_tkeep[3] = s_rxd3_axis_tkeep;
-   assign s_rxd_axis_tlast[3] = s_rxd3_axis_tlast;
-//   assign s_rxd_axis_tid[3] = s_rxd3_axis_tid;
-   assign s_rxd3_axis_tready = s_rxd_axis_tready[3];
-
-
+  assign m_rxd_axis_tlast=s_rxd_axis_tlast[cur_queue];   
+      
 
 endmodule
 

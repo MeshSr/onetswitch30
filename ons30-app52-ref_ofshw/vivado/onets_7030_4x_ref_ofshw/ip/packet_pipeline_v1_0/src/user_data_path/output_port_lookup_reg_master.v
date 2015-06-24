@@ -40,9 +40,11 @@ cam_data_mask[prio][95:64] = reg_data;*/
 
 module output_port_lookup_reg_master#
 (
+   parameter CMP_WIDTH=64,
    parameter LUT_DEPTH=16,
    parameter LUT_DEPTH_BITS=log2(LUT_DEPTH),
-   parameter TABLE_NUM=2
+   parameter TABLE_NUM=2,
+   parameter CURRENT_TABLE_ID=0
 )
 (
    input [31:0] data_output_port_lookup_i,
@@ -58,12 +60,14 @@ module output_port_lookup_reg_master#
    output reg [319:0]lut_actions_in,  
    input [319:0]lut_actions_out,
       
-   output reg[`PRIO_WIDTH+`ACTION_WIDTH-1:0] tcam_addr_out,
-   output reg [31:0] tcam_data_out,
+   output reg[`PRIO_WIDTH-1:0] tcam_addr_out,
+   output reg [CMP_WIDTH+31:0] tcam_data_out,
+   output reg [CMP_WIDTH-1:0] tcam_data_mask_out,
    output reg tcam_we,
-   input [31:0] tcam_data_in,
+   input [CMP_WIDTH+31:0] tcam_data_in,
+   input [CMP_WIDTH-1:0] tcam_data_mask_in,
    
-   output reg [3:0] counter_addr_out,
+   output reg [LUT_DEPTH_BITS-1:0] counter_addr_out,
    output reg counter_addr_rd,
    input [31:0]pkt_counter_in,
    input [31:0]byte_counter_in,
@@ -86,7 +90,8 @@ module output_port_lookup_reg_master#
       end
    endfunction // log2
     reg [`OPENFLOW_ACTION_WIDTH-1:0]    lut_actions_tmp;
-    reg [95:0] tcam_tmp;    
+    reg [CMP_WIDTH+31:0] tcam_data_tmp;   
+    reg [CMP_WIDTH-1:0] tcam_data_mask_tmp;
     reg [LUT_DEPTH_BITS-1:0]clear_count;
     
     
@@ -100,16 +105,17 @@ module output_port_lookup_reg_master#
                HEAD=4,
                COUNTER=5,
                COUNTER_ACK=6,
-               LUT_READ_RAM=7,
-               LUT_MOD_ACTION=8,
-               LUT_WRITE_RAM=9,
-               LUT_READ=10,
-               TCAM_MOD_DATA=11,
-               TCAM_WRITE_RAM=12,
-               TCAM_READ=13,
-               ACK_BLANK=14,
-               REG_DONE=15,
-               CLEAR=16;
+               LUT_READ_PRE=7,
+               LUT_READ_RAM=8,
+               LUT_MOD_ACTION=9,
+               LUT_WRITE_RAM=10,
+               LUT_READ=11,
+               TCAM_MOD_DATA=12,
+               TCAM_WRITE_RAM=13,
+               TCAM_READ=14,
+               ACK_BLANK=15,
+               REG_DONE=16,
+               CLEAR=17;
                
     always@(posedge clk)
       if(reset) cur_st<=CLEAR;
@@ -122,7 +128,7 @@ module output_port_lookup_reg_master#
          CLEAR:if(clear_count==LUT_DEPTH-1) nxt_st=IDLE;
          IDLE:if(req_output_port_lookup_i) nxt_st=DECON;
          DECON:
-            if(addr_output_port_lookup_i[`TABLE_ID_POS+`TABLE_ID_WIDTH-1:`TABLE_ID_POS]<=TABLE_NUM && addr_output_port_lookup_i[`PRIO_POS+`PRIO_WIDTH-1:`PRIO_POS]<LUT_DEPTH)
+            if(addr_output_port_lookup_i[`TABLE_ID_POS+`TABLE_ID_WIDTH-1:`TABLE_ID_POS]==CURRENT_TABLE_ID && addr_output_port_lookup_i[`PRIO_POS+`PRIO_WIDTH-1:`PRIO_POS]<LUT_DEPTH)
             begin
                if(deconcentrator_flag==`LUT_ACTION_TAG)        nxt_st=LUT;
                else if(deconcentrator_flag==`TCAM_TAG)         nxt_st=TCAM;
@@ -131,7 +137,9 @@ module output_port_lookup_reg_master#
                else nxt_st=ACK_BLANK;
             end
             else nxt_st=ACK_BLANK;
-         LUT:if(rw_output_port_lookup_i==0) 
+         LUT:nxt_st=LUT_READ_PRE;
+         LUT_READ_PRE:
+            if(rw_output_port_lookup_i==0) 
                  nxt_st=LUT_MOD_ACTION;
              else if(rw_output_port_lookup_i==1) 
                  nxt_st=LUT_READ;               
@@ -140,9 +148,10 @@ module output_port_lookup_reg_master#
          LUT_READ:nxt_st=REG_DONE;    
          TCAM:
             if(rw_output_port_lookup_i==0) 
-               nxt_st=TCAM_WRITE_RAM;
+               nxt_st=TCAM_MOD_DATA;
             else if(rw_output_port_lookup_i==1) 
-               nxt_st=TCAM_READ;        
+               nxt_st=TCAM_READ;       
+         TCAM_MOD_DATA:nxt_st= TCAM_WRITE_RAM;
          TCAM_WRITE_RAM:nxt_st=REG_DONE;
          TCAM_READ:nxt_st=REG_DONE;
          COUNTER:nxt_st=COUNTER_ACK;
@@ -186,24 +195,24 @@ module output_port_lookup_reg_master#
     endcase
     else deconcentrator_flag <= 4'hf ;
     
-    always@(*)
+    always@(posedge clk)
       if(reset)
-         lut_actions_tmp=0;   
+         lut_actions_tmp<=0;   
        else if(cur_st==LUT_MOD_ACTION)
        begin
          lut_actions_tmp=lut_actions_out;
            case(addr_output_port_lookup_i[`ACTION_POS+`ACTION_WIDTH-1:`ACTION_POS])
-               `OPENFLOW_WILDCARD_LOOKUP_ACTION_0_REG: lut_actions_tmp[31:0]     =data_output_port_lookup_i;
-               `OPENFLOW_WILDCARD_LOOKUP_ACTION_1_REG: lut_actions_tmp[63:32]    =data_output_port_lookup_i;
-               `OPENFLOW_WILDCARD_LOOKUP_ACTION_2_REG: lut_actions_tmp[95:64]    =data_output_port_lookup_i;
-               `OPENFLOW_WILDCARD_LOOKUP_ACTION_3_REG: lut_actions_tmp[127:96]   =data_output_port_lookup_i;
-               `OPENFLOW_WILDCARD_LOOKUP_ACTION_4_REG: lut_actions_tmp[159:128]  =data_output_port_lookup_i;
-               `OPENFLOW_WILDCARD_LOOKUP_ACTION_5_REG: lut_actions_tmp[191:160]  =data_output_port_lookup_i;
-               `OPENFLOW_WILDCARD_LOOKUP_ACTION_6_REG: lut_actions_tmp[223:192]  =data_output_port_lookup_i;
-               `OPENFLOW_WILDCARD_LOOKUP_ACTION_7_REG: lut_actions_tmp[255:224]  =data_output_port_lookup_i;
-               `OPENFLOW_WILDCARD_LOOKUP_ACTION_8_REG: lut_actions_tmp[287:256]  =data_output_port_lookup_i;
-               `OPENFLOW_WILDCARD_LOOKUP_ACTION_9_REG: lut_actions_tmp[319:288]  =data_output_port_lookup_i;
-               default:lut_actions_tmp=lut_actions_out;
+               `OPENFLOW_WILDCARD_LOOKUP_ACTION_0_REG: lut_actions_tmp[31:0]     <=data_output_port_lookup_i;
+               `OPENFLOW_WILDCARD_LOOKUP_ACTION_1_REG: lut_actions_tmp[63:32]    <=data_output_port_lookup_i;
+               `OPENFLOW_WILDCARD_LOOKUP_ACTION_2_REG: lut_actions_tmp[95:64]    <=data_output_port_lookup_i;
+               `OPENFLOW_WILDCARD_LOOKUP_ACTION_3_REG: lut_actions_tmp[127:96]   <=data_output_port_lookup_i;
+               `OPENFLOW_WILDCARD_LOOKUP_ACTION_4_REG: lut_actions_tmp[159:128]  <=data_output_port_lookup_i;
+               `OPENFLOW_WILDCARD_LOOKUP_ACTION_5_REG: lut_actions_tmp[191:160]  <=data_output_port_lookup_i;
+               `OPENFLOW_WILDCARD_LOOKUP_ACTION_6_REG: lut_actions_tmp[223:192]  <=data_output_port_lookup_i;
+               `OPENFLOW_WILDCARD_LOOKUP_ACTION_7_REG: lut_actions_tmp[255:224]  <=data_output_port_lookup_i;
+               `OPENFLOW_WILDCARD_LOOKUP_ACTION_8_REG: lut_actions_tmp[287:256]  <=data_output_port_lookup_i;
+               `OPENFLOW_WILDCARD_LOOKUP_ACTION_9_REG: lut_actions_tmp[319:288]  <=data_output_port_lookup_i;
+               default:lut_actions_tmp<=lut_actions_out;
            endcase
        end
 
@@ -233,44 +242,73 @@ module output_port_lookup_reg_master#
          ack_output_port_lookup_o<=1;
       else ack_output_port_lookup_o<=0;
     
-    always@(*)
+    always@(posedge clk)
       if(reset)
-         tcam_addr_out=0;
+         tcam_addr_out<=0;
       else if(cur_st==CLEAR)
-         tcam_addr_out=clear_count;
-      else if(cur_st==TCAM)
-         tcam_addr_out=addr_output_port_lookup_i[`PRIO_WIDTH+`ACTION_WIDTH+`ACTION_POS-1:`ACTION_POS];
+         tcam_addr_out<=clear_count;
+      else if(cur_st==TCAM | cur_st==TCAM_WRITE_RAM)
+         tcam_addr_out<=addr_output_port_lookup_i[`PRIO_WIDTH+`PRIO_POS-1:`PRIO_POS];
+      else tcam_addr_out<=0;
     
-    always@(*)
+    /*always@(*)
       if(reset)
          tcam_data_out=0;
       else if(cur_st==TCAM_WRITE_RAM)
          tcam_data_out=data_output_port_lookup_i;
-      else tcam_data_out=0;
+      else tcam_data_out=0;*/
     
-    always@(*)
+    always@(posedge clk)
       if(reset)
-         tcam_we=0;
+         tcam_we<=0;
       else if(cur_st==TCAM_WRITE_RAM)
-         tcam_we=1;
-      else tcam_we=0;      
+         tcam_we<=1;
+      else tcam_we<=0;     
       
       always@(posedge clk)
          if(reset)
-            tcam_tmp<=0;
+            tcam_data_out<=0;
          else if(cur_st==TCAM_MOD_DATA)
-            tcam_tmp<=tcam_data_in;
+            tcam_data_out<=tcam_data_in;
          else if(cur_st==TCAM_WRITE_RAM)
-            case(addr_output_port_lookup_i[`ACTION_POS+`ACTION_WIDTH-1:`ACTION_POS])
-               `OPENFLOW_WILDCARD_LOOKUP_CMP_MASK_0_REG:tcam_tmp[31:0]<=data_output_port_lookup_i;
-               `OPENFLOW_WILDCARD_LOOKUP_CMP_MASK_1_REG:tcam_tmp[63:32]<=data_output_port_lookup_i;
-               `OPENFLOW_WILDCARD_LOOKUP_CMP_MASK_2_REG:tcam_tmp[95:64]<=data_output_port_lookup_i;
-               `OPENFLOW_WILDCARD_LOOKUP_CMP_0_REG:tcam_tmp[31:0]<=data_output_port_lookup_i;
-               `OPENFLOW_WILDCARD_LOOKUP_CMP_1_REG:tcam_tmp[63:32]<=data_output_port_lookup_i;
-               `OPENFLOW_WILDCARD_LOOKUP_CMP_2_REG:tcam_tmp[95:64]<=data_output_port_lookup_i;
-               default: tcam_tmp<=tcam_data_in;
-            endcase
-            
+         begin
+            if(CMP_WIDTH<=32)
+               case(addr_output_port_lookup_i[`ACTION_POS+`ACTION_WIDTH-1:`ACTION_POS])
+                  `OPENFLOW_WILDCARD_LOOKUP_CMP_0_REG:tcam_data_out[31:0]<=data_output_port_lookup_i;
+                  `OPENFLOW_WILDCARD_LOOKUP_CMP_1_REG:tcam_data_out[63:32]<=data_output_port_lookup_i;         
+                  default: tcam_data_out<=tcam_data_out;
+               endcase
+            else //(CMP_WIDTH<=64)
+               case(addr_output_port_lookup_i[`ACTION_POS+`ACTION_WIDTH-1:`ACTION_POS])
+                  `OPENFLOW_WILDCARD_LOOKUP_CMP_0_REG:tcam_data_out[31:0]<=data_output_port_lookup_i;
+                  `OPENFLOW_WILDCARD_LOOKUP_CMP_1_REG:tcam_data_out[63:32]<=data_output_port_lookup_i;
+                  `OPENFLOW_WILDCARD_LOOKUP_CMP_2_REG:tcam_data_out[95:64]<=data_output_port_lookup_i;               
+                  default: tcam_data_out<=tcam_data_out;
+               endcase   
+         end
+
+      always@(posedge clk)
+         if(reset)
+            tcam_data_mask_out<=0;
+         else if(cur_st==TCAM_MOD_DATA)
+            tcam_data_mask_out<=tcam_data_mask_in;
+         else if(cur_st==TCAM_WRITE_RAM)
+         begin
+            if(CMP_WIDTH<=32)
+               case(addr_output_port_lookup_i[`ACTION_POS+`ACTION_WIDTH-1:`ACTION_POS])
+                  `OPENFLOW_WILDCARD_LOOKUP_CMP_MASK_0_REG:tcam_data_mask_out[31:0]<=data_output_port_lookup_i;
+                  /*`OPENFLOW_WILDCARD_LOOKUP_CMP_MASK_1_REG:tcam_data_mask_out[63:32]<=data_output_port_lookup_i;
+                  `OPENFLOW_WILDCARD_LOOKUP_CMP_MASK_2_REG:tcam_data_mask_out[95:64]<=data_output_port_lookup_i;*/
+                  default: tcam_data_mask_out<=tcam_data_mask_out;
+               endcase
+            else 
+               case(addr_output_port_lookup_i[`ACTION_POS+`ACTION_WIDTH-1:`ACTION_POS])
+                  `OPENFLOW_WILDCARD_LOOKUP_CMP_MASK_0_REG:tcam_data_mask_out[31:0]<=data_output_port_lookup_i;
+                  `OPENFLOW_WILDCARD_LOOKUP_CMP_MASK_1_REG:tcam_data_mask_out[63:32]<=data_output_port_lookup_i;
+                  default: tcam_data_mask_out<=tcam_data_mask_out;
+               endcase
+         end
+/*            
 `ifdef ONETS45
 begin      
       always@(posedge clk)
@@ -352,7 +390,7 @@ begin
             data_output_port_lookup_o<=32'hdeadbeef;
 end
 `elsif ONETS20
-begin      
+begin      */
       always@(posedge clk)
          if(reset)
             data_output_port_lookup_o<=0;
@@ -372,26 +410,26 @@ begin
             endcase
          else if(cur_st==TCAM_READ)
             case(addr_output_port_lookup_i[`ACTION_POS+`ACTION_WIDTH-1:`ACTION_POS])
-               `OPENFLOW_WILDCARD_LOOKUP_CMP_MASK_0_REG:data_output_port_lookup_o<=tcam_data_in;
-               `OPENFLOW_WILDCARD_LOOKUP_CMP_MASK_1_REG:data_output_port_lookup_o<=tcam_data_in;
-               `OPENFLOW_WILDCARD_LOOKUP_CMP_MASK_2_REG:data_output_port_lookup_o<=tcam_data_in;
-               `OPENFLOW_WILDCARD_LOOKUP_CMP_0_REG:data_output_port_lookup_o<=tcam_data_in;
-               `OPENFLOW_WILDCARD_LOOKUP_CMP_1_REG:data_output_port_lookup_o<=tcam_data_in;
-               `OPENFLOW_WILDCARD_LOOKUP_CMP_2_REG:data_output_port_lookup_o<=tcam_data_in;
+               `OPENFLOW_WILDCARD_LOOKUP_CMP_MASK_0_REG:data_output_port_lookup_o<=tcam_data_mask_in[31:0];
+               `OPENFLOW_WILDCARD_LOOKUP_CMP_MASK_1_REG:data_output_port_lookup_o<=tcam_data_mask_in[63:32];
+               //`OPENFLOW_WILDCARD_LOOKUP_CMP_MASK_2_REG:data_output_port_lookup_o<=tcam_data_mask_in[95:64];
+               `OPENFLOW_WILDCARD_LOOKUP_CMP_0_REG:data_output_port_lookup_o<=tcam_data_in[31:0];
+               `OPENFLOW_WILDCARD_LOOKUP_CMP_1_REG:data_output_port_lookup_o<=tcam_data_in[63:32];
+               `OPENFLOW_WILDCARD_LOOKUP_CMP_2_REG:data_output_port_lookup_o<=tcam_data_in[95:64];
                default: data_output_port_lookup_o<=32'hdeadbeef;
             endcase
          else if(cur_st==COUNTER_ACK)
             case(addr_output_port_lookup_i[`ACTION_POS+`ACTION_WIDTH-1:`ACTION_POS])
-               `OPENFLOW_WILDCARD_LOOKUP_BYTE_COUNTER:   data_output_port_lookup_o<=32'hdeadbeef;
-               `OPENFLOW_WILDCARD_LOOKUP_PKT_COUNTER:    data_output_port_lookup_o<=32'hdeadbeef;
+               `OPENFLOW_WILDCARD_LOOKUP_BYTE_COUNTER:   data_output_port_lookup_o<=byte_counter_in;
+               `OPENFLOW_WILDCARD_LOOKUP_PKT_COUNTER:    data_output_port_lookup_o<=pkt_counter_in;
                default:data_output_port_lookup_o<=32'hdeadbeef;
             endcase
          else if(cur_st==HEAD)
             data_output_port_lookup_o<=head_combine;
          else if(cur_st==ACK_BLANK)
             data_output_port_lookup_o<=32'hdeadbeef;
-end
-`endif
+/*end
+`endif*/
          
     
     always@(*)
@@ -433,3 +471,4 @@ end
     
     
 endmodule
+

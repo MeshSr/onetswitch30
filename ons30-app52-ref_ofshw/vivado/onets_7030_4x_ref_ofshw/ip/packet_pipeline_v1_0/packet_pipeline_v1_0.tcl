@@ -23,6 +23,7 @@ import_files $ip_proj_root/src/core/pulse_synchronizer.v
 import_files $ip_proj_root/src/core/rx_queue.v
 import_files $ip_proj_root/src/core/small_fifo.v
 import_files $ip_proj_root/src/core/tx_queue.v
+import_files $ip_proj_root/src/user_data_path/configuration.v
 import_files $ip_proj_root/src/user_data_path/action_processor.v
 import_files $ip_proj_root/src/user_data_path/data_fifo.v
 import_files $ip_proj_root/src/user_data_path/dma_queue.v
@@ -52,8 +53,6 @@ import_files $ip_proj_root/src/user_data_path/wildcard_processor.v
 import_files $ip_proj_root/src/user_data_path/wildcard_tcam.v
 
 
-update_compile_order -fileset sources_1
-update_compile_order -fileset sim_1
 
 
 set file1 "include/ONETS30.v"
@@ -67,6 +66,11 @@ set file_obj3 [get_files -of_objects sources_1 [list "*$file3"]]
 set_property "is_global_include" "1" $file_obj1
 set_property "is_global_include" "1" $file_obj2
 set_property "is_global_include" "1" $file_obj3
+
+
+update_compile_order -fileset sources_1
+update_compile_order -fileset sim_1
+
 
 ipx::package_project -root_dir $ip_proj_root
 set_property library {user} [ipx::current_core]

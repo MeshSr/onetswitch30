@@ -18,9 +18,13 @@ module wildcard_tcam
 //   output reg[DEPTH - 1 : 0]        match_addr,
 
    input we,
-   input [`PRIO_WIDTH+`ACTION_WIDTH-1:0] tcam_addr,
-   output reg [31:0]tcam_data_out, 
-   input [31:0]tcam_data_in
+   input [`PRIO_WIDTH -1:0] tcam_addr,
+   output reg [CMP_WIDTH-1:0]tcam_data_out, 
+   output reg [CMP_WIDTH-33:0] tcam_data_mask_out,
+   input [CMP_WIDTH-1:0]tcam_data_in,
+   input [CMP_WIDTH-33:0]tcam_data_mask_in
+   /*input [CMP_WIDTH-1:0]tcam_data_in,
+   input [CMP_WIDTH-33:0]tcam_data_mask_in*/
 );
 
    wire [DEPTH - 1 : 0]             match_addr_unencoded;
@@ -28,27 +32,24 @@ module wildcard_tcam
    wire [CMP_WIDTH - 1 : 0]         stage1[DEPTH - 1 : 0];
    wire [CMP_WIDTH - 1 : 0]         stage2[DEPTH - 1 : 0];
    reg [CMP_WIDTH - 1 : 0]         cam_data[DEPTH - 1 : 0];
-   reg [CMP_WIDTH - 1 : 0]         cam_data_mask[DEPTH - 1 : 0];
+   reg [CMP_WIDTH - 33 : 0]         cam_data_mask[DEPTH - 1 : 0];
     
    reg [DEPTH_BITS-1:0] prio;
    wire [DEPTH - 1 : 0]         match_addr_tmp;
    reg [7:0]                    reg_addr_actions_d;
    reg [7:0]                     clear_count;
    
-   always@(posedge clk)
-   if(reset)
-      tcam_data_out<=0;
-   else if(tcam_addr[`PRIO_POS+`PRIO_WIDTH-1:`PRIO_POS]<DEPTH)
-      case(tcam_addr[`ACTION_POS+`ACTION_WIDTH-1:`ACTION_POS])
-         `OPENFLOW_WILDCARD_LOOKUP_CMP_MASK_0_REG:tcam_data_out<=cam_data_mask[tcam_addr[15:8]][31:0]   ;
-         `OPENFLOW_WILDCARD_LOOKUP_CMP_MASK_1_REG:tcam_data_out<=cam_data_mask[tcam_addr[15:8]][63:32]  ;
-         `OPENFLOW_WILDCARD_LOOKUP_CMP_MASK_2_REG:tcam_data_out<=cam_data_mask[tcam_addr[15:8]][95:64]  ;
-         `OPENFLOW_WILDCARD_LOOKUP_CMP_0_REG:tcam_data_out<=cam_data[tcam_addr[15:8]][31:0]   ;
-         `OPENFLOW_WILDCARD_LOOKUP_CMP_1_REG:tcam_data_out<=cam_data[tcam_addr[15:8]][63:32]  ;
-         `OPENFLOW_WILDCARD_LOOKUP_CMP_2_REG:tcam_data_out<=cam_data[tcam_addr[15:8]][95:64]  ;
-         default: tcam_data_out<=32'hdeadbeef;
-      endcase
-    else tcam_data_out<=32'hdeadbeef;
+   always@(*)
+   if(tcam_addr < DEPTH)
+   begin
+         tcam_data_mask_out=cam_data_mask[tcam_addr]   ;
+         tcam_data_out=cam_data[tcam_addr]  ;
+   end
+   else begin
+      tcam_data_mask_out=0;
+      tcam_data_out=0;
+   end
+
       
       always@(posedge clk)
       if(reset)
@@ -66,7 +67,7 @@ module wildcard_tcam
       end
       else if(we)
             begin
-              if(CMP_WIDTH<=32)
+              /*if(CMP_WIDTH<=32)
                        case(tcam_addr[`ACTION_POS+`ACTION_WIDTH-1:`ACTION_POS] )
                           `OPENFLOW_WILDCARD_LOOKUP_CMP_MASK_0_REG:cam_data_mask[tcam_addr[7+DEPTH_BITS:8]][CMP_WIDTH-1:0] <=tcam_data_in;
                           `OPENFLOW_WILDCARD_LOOKUP_CMP_0_REG:cam_data[tcam_addr[7+DEPTH_BITS:8]][CMP_WIDTH-1:0] <=tcam_data_in; 
@@ -74,19 +75,21 @@ module wildcard_tcam
               else if(CMP_WIDTH<=64)
                       case(tcam_addr[`ACTION_POS+`ACTION_WIDTH-1:`ACTION_POS] )
                           `OPENFLOW_WILDCARD_LOOKUP_CMP_MASK_0_REG:cam_data_mask[tcam_addr[7+DEPTH_BITS:8]][31:0] <=tcam_data_in;
-                          `OPENFLOW_WILDCARD_LOOKUP_CMP_MASK_1_REG:cam_data_mask[tcam_addr[7+DEPTH_BITS:8]][CMP_WIDTH-1:32]<=tcam_data_in;
+                          //`OPENFLOW_WILDCARD_LOOKUP_CMP_MASK_1_REG:cam_data_mask[tcam_addr[7+DEPTH_BITS:8]][CMP_WIDTH-1:32]<=tcam_data_in;
                           `OPENFLOW_WILDCARD_LOOKUP_CMP_0_REG:cam_data[tcam_addr[7+DEPTH_BITS:8]][31:0] <=tcam_data_in; 
                           `OPENFLOW_WILDCARD_LOOKUP_CMP_1_REG:cam_data[tcam_addr[7+DEPTH_BITS:8]][CMP_WIDTH-1:32]<=tcam_data_in; 
                        endcase  
-              else if(CMP_WIDTH<=96)
-               case(tcam_addr[`ACTION_POS+`ACTION_WIDTH-1:`ACTION_POS] )
+              else if(CMP_WIDTH<=96)*/
+               /*case(tcam_addr[`ACTION_POS+`ACTION_WIDTH-1:`ACTION_POS] )
                   `OPENFLOW_WILDCARD_LOOKUP_CMP_MASK_0_REG:cam_data_mask[tcam_addr[7+DEPTH_BITS:8]][31:0] <=tcam_data_in;
                   `OPENFLOW_WILDCARD_LOOKUP_CMP_MASK_1_REG:cam_data_mask[tcam_addr[7+DEPTH_BITS:8]][63:32]<=tcam_data_in;
-                  `OPENFLOW_WILDCARD_LOOKUP_CMP_MASK_2_REG:cam_data_mask[tcam_addr[7+DEPTH_BITS:8]][CMP_WIDTH-1:64]<=tcam_data_in;
+                  //`OPENFLOW_WILDCARD_LOOKUP_CMP_MASK_2_REG:cam_data_mask[tcam_addr[7+DEPTH_BITS:8]][CMP_WIDTH-1:64]<=tcam_data_in;
                   `OPENFLOW_WILDCARD_LOOKUP_CMP_0_REG:cam_data[tcam_addr[7+DEPTH_BITS:8]][31:0] <=tcam_data_in; 
                   `OPENFLOW_WILDCARD_LOOKUP_CMP_1_REG:cam_data[tcam_addr[7+DEPTH_BITS:8]][63:32]<=tcam_data_in; 
-                  `OPENFLOW_WILDCARD_LOOKUP_CMP_2_REG:cam_data[tcam_addr[7+DEPTH_BITS:8]][CMP_WIDTH-1:64]<=tcam_data_in; 
-               endcase  
+                  `OPENFLOW_WILDCARD_LOOKUP_CMP_2_REG:cam_data[tcam_addr[7+DEPTH_BITS:8]][CMP_WIDTH-1:64]<=tcam_data_in; */
+                  cam_data_mask[tcam_addr] <= tcam_data_mask_in;
+                  cam_data[tcam_addr] <= tcam_data_in;
+               //endcase  
             end     
 ////////////////////////////////////    CMP_DATA    /////////////////////////////////////////
 
@@ -138,7 +141,7 @@ module wildcard_tcam
       genvar n;
       generate 
          for(n = DEPTH-1; n >= 0; n = n - 1) begin : gen_cmp
-            assign stage1[n] = cmp_din_reg ^~ cam_data[n];
+            assign stage1[n] = cmp_din_reg ^ ~cam_data[n];
             assign stage2[n] = stage1[n] | cam_data_mask[n];
             assign match_addr_tmp[n]=&stage2[n];
          end
@@ -146,25 +149,40 @@ module wildcard_tcam
       
    integer                               i;      
          always @(*) 
+         begin match_addr=0;
          if(|match_addr_tmp)
          begin
             for (i = 0; i <= DEPTH-1; i = i+1) begin
                if (match_addr_tmp[i]) 
                   match_addr = i[DEPTH_BITS-1:0];
+               /*case(1)
+                  match_addr_tmp[i]:match_addr = i[DEPTH_BITS-1:0];
+                  //default:match_addr = 0;
+               endcase*/
             end
-         end         
-         else    match_addr=0;
+         end     
+         end    
   
   reg cmp_req_d1;
   reg cmp_req_d2;
+  reg cmp_req_d3;
   
     always@(posedge clk)
+    if(reset)
+    begin
+      cmp_req_d1<=0;
+      cmp_req_d2<=0;
+      cmp_req_d3<=0;
+    end
+    else
     begin
         cmp_req_d1<=cmp_req;
         cmp_req_d2<=cmp_req_d1;
+        cmp_req_d3<=cmp_req_d2;
     end
               
    assign busy = 0;
-   assign match = (| match_addr_tmp) && cmp_req_d2;
+   assign match = (| match_addr_tmp) && cmp_req_d3;
    
 endmodule
+

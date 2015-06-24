@@ -260,7 +260,14 @@
 
             PKT_WORDS: begin
                if(in_wr) begin
-
+                  if(in_ctrl!=0)
+                  begin
+                     flow_entry_vld    <= 1'b1;
+                     state             <= MODULE_HDRS;
+                     flow_entry_all        <= flow_entry_default;
+                     pkt_size          <= 0;
+                  end
+                  else begin
                   counter <= counter + 1;
 
                   case(counter)
@@ -378,6 +385,7 @@
 
                   endcase // case(counter)
                end // if (in_wr)
+               end
             end // case: PKT_WORDS
 
             WAIT_EOP: begin

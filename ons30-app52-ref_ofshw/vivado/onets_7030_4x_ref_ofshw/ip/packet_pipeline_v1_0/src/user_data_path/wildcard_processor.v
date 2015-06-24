@@ -58,8 +58,11 @@ module wildcard_processor
     
     reg [DATA_WIDTH-1:0]             out_data_d1;
     reg [CTRL_WIDTH-1:0]             out_ctrl_d1;
+    reg [DATA_WIDTH-1:0]             out_data_d2;
+    reg [CTRL_WIDTH-1:0]             out_ctrl_d2;
     reg                               out_wr_d1;
     reg                               out_wr_d2;
+    reg                               out_wr_d3;
 
    // assign out_data_d1=in_fifo_data;
    // assign out_ctrl_d1=in_fifo_ctrl;
@@ -71,11 +74,14 @@ module wildcard_processor
         begin
             out_data_d1<=in_fifo_data;
             out_ctrl_d1<=in_fifo_ctrl;
-            out_data<=out_data_d1;
-            out_ctrl<=out_ctrl_d1;
+            out_data_d2<=out_data_d1;
+            out_ctrl_d2<=out_ctrl_d1;
+            out_data<=out_data_d2;
+            out_ctrl<=out_ctrl_d2;
             out_wr_d1<=in_fifo_rd_en;
             out_wr_d2<=out_wr_d1;
-            out_wr<=out_wr_d2;
+            out_wr_d3<=out_wr_d2;
+            out_wr<=out_wr_d3;
         end
         
         
@@ -110,11 +116,11 @@ module wildcard_processor
                 READ_ACTION:
                     nxt_st=READ_HEAD;
                 READ_HEAD:
-                    nxt_st=READ_DATA;
+                    if(out_rdy) nxt_st=READ_DATA;
                 READ_DATA:
-                    if(in_fifo_ctrl==0) nxt_st=WAIT_EOP;
+                    if(in_fifo_ctrl==0 && out_rdy) nxt_st=WAIT_EOP;
                 WAIT_EOP:
-                    if(in_fifo_ctrl!=0) nxt_st=IDLE;
+                    if(in_fifo_ctrl!=0 && out_rdy) nxt_st=IDLE;
                 default:nxt_st=IDLE;
             endcase
         end
@@ -124,31 +130,31 @@ module wildcard_processor
             result_fifo_rd_en=0;
             in_fifo_rd_en=0;
             if(cur_st==READ_ACTION)
-                result_fifo_rd_en=1;
+                result_fifo_rd_en=out_rdy;
             else if(cur_st==READ_HEAD)
-                in_fifo_rd_en=1;
+                in_fifo_rd_en=out_rdy;
             else if(cur_st==READ_DATA)
-                    in_fifo_rd_en=1;
+                    in_fifo_rd_en=out_rdy;
             else if(cur_st==WAIT_EOP)
                 begin
                     if(in_fifo_ctrl!=0)
                         in_fifo_rd_en=0;
-                    else in_fifo_rd_en=1;
+                    else in_fifo_rd_en=out_rdy;
                 end
         end
     
-    always@(*)
+    always@(posedge clk)
         if(reset)
-            src_port=0;
+            src_port<=0;
         else// if(cur_st==READ_HEAD)
             if(in_fifo_ctrl==`IO_QUEUE_STAGE_NUM)
-                src_port=in_fifo_data[`IOQ_SRC_PORT_POS + `OPENFLOW_ENTRY_SRC_PORT_WIDTH - 1 : `IOQ_SRC_PORT_POS] ;      
+                src_port<=in_fifo_data[`IOQ_SRC_PORT_POS + `OPENFLOW_ENTRY_SRC_PORT_WIDTH - 1 : `IOQ_SRC_PORT_POS] ;      
     
-    always@(*)
+    always@(posedge clk)
         if(reset)
-            actions=0;
+            actions<=0;
         else if(cur_st==READ_DATA)
-            actions= result_fifo_dout;
+            actions<= result_fifo_dout;
                    
     always@(posedge clk)
         if(reset)

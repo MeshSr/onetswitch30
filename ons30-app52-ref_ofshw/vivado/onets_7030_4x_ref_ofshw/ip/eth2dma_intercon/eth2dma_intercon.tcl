@@ -5,8 +5,6 @@ set ip_proj_part "xc7z030sbg485-2"
 
 create_project $ip_proj_name $ip_proj_root -part $ip_proj_part -force
 
-import_ip $ip_proj_root/src/axis_intercon_421/axis_intercon_421.xci
-import_ip $ip_proj_root/src/rxs_tid_fifo_8x16/rxs_tid_fifo_8x16.xci
 import_files $ip_proj_root/src/eth2dma_intercon.v 
 
 ipx::package_project -root_dir $ip_proj_root

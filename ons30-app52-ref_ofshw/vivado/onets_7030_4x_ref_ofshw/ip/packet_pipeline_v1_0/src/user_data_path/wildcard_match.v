@@ -43,12 +43,11 @@
   module wildcard_match
     #(parameter NUM_OUTPUT_QUEUES = 8,                  // obvious
       parameter PKT_SIZE_WIDTH = 12,                    // number of bits for pkt size
-      parameter UDP_REG_SRC_WIDTH = 2,                   // identifies which module started this request
-      parameter OPENFLOW_WILDCARD_LOOKUP_REG_ADDR_WIDTH = 10,
-      parameter OPENFLOW_WILDCARD_LOOKUP_BLOCK_ADDR = 13'h1,
       parameter OPENFLOW_ENTRY_WIDTH = 64,
       parameter OPENFLOW_WILDCARD_TABLE_SIZE = 16,
-      parameter CURRENT_TABLE_ID = 0
+      parameter CURRENT_TABLE_ID = 0,
+      parameter OPENFLOW_WILDCARD_TABLE_DEPTH = 4,
+      parameter CMP_WIDTH = 64
       )
    (// --- Interface for lookups
     input [OPENFLOW_ENTRY_WIDTH-1:0]       flow_entry,
@@ -66,10 +65,12 @@
     //input                                  wildcard_wins,
     //input                                  wildcard_loses,
     
+    input [`PRIO_WIDTH -1:0] tcam_addr,
+    output  [CMP_WIDTH-1:0] tcam_data_out,
+    output  [CMP_WIDTH-33:0] tcam_data_mask_out,
     input tcam_we,
-    input [`PRIO_WIDTH+`ACTION_WIDTH-1:0] tcam_addr,
-    output [31:0]tcam_data_out, 
-    input [31:0]tcam_data_in,
+    input [CMP_WIDTH-1:0] tcam_data_in,
+    input [CMP_WIDTH-33:0] tcam_data_mask_in,
     
     input bram_cs,
     input bram_we,
@@ -77,7 +78,7 @@
     input [319:0]lut_actions_in,  
     output [319:0]lut_actions_out,
     
-    input [3:0] counter_addr_in,
+    input [OPENFLOW_WILDCARD_TABLE_DEPTH-1:0] counter_addr_in,
     input counter_addr_rd,
     output [31:0]pkt_counter_out,
     output [31:0]byte_counter_out,
@@ -85,29 +86,21 @@
    input                            skip_lookup,
 
     // --- Interface to Watchdog Timer
-    input                                  table_flush,
+    //input                                  table_flush,
 
     // --- Misc
     input [31:0]                           openflow_timer,
     input                                  reset,
     input                                  clk,
-    output [3:0]            wildcard_address
+    output [OPENFLOW_WILDCARD_TABLE_DEPTH-1:0]            wildcard_address
    );
 
    `LOG2_FUNC
    `CEILDIV_FUNC
 
    //-------------------- Internal Parameters ------------------------
-   localparam WILDCARD_NUM_DATA_WORDS_USED = ceildiv(`OPENFLOW_ACTION_WIDTH,`CPCI_NF2_DATA_WIDTH);
-   localparam WILDCARD_NUM_CMP_WORDS_USED  = ceildiv(OPENFLOW_ENTRY_WIDTH, `CPCI_NF2_DATA_WIDTH);
-   localparam WILDCARD_NUM_REGS_USED = (2 // for the read and write address registers
-                                        + WILDCARD_NUM_DATA_WORDS_USED // for data associated with an entry
-                                        + WILDCARD_NUM_CMP_WORDS_USED  // for the data to match on
-                                        + WILDCARD_NUM_CMP_WORDS_USED  // for the don't cares
-                                        );
 
-   localparam LUT_DEPTH_BITS = log2(OPENFLOW_WILDCARD_TABLE_SIZE);
-   localparam METADATA_WIDTH = LUT_DEPTH_BITS;
+   localparam METADATA_WIDTH = OPENFLOW_WILDCARD_TABLE_DEPTH;
 
    localparam SIMULATION = 0
 	      // synthesis translate_off
@@ -119,7 +112,7 @@
    //---------------------- Wires and regs----------------------------
    wire                                                      cam_busy;
    wire                                                      cam_match;
-   wire [LUT_DEPTH_BITS-1:0]                                 cam_match_addr;
+   wire [OPENFLOW_WILDCARD_TABLE_DEPTH-1:0]                  cam_match_addr;
 
    wire [OPENFLOW_ENTRY_WIDTH-1:0]                           cam_din;
 
@@ -127,7 +120,7 @@
 
 
    //wire [LUT_DEPTH_BITS-1:0]                                 wildcard_address;
-   wire [LUT_DEPTH_BITS-1:0]                                 dout_wildcard_address;
+   wire [OPENFLOW_WILDCARD_TABLE_DEPTH-1:0]                                 dout_wildcard_address;
 
    reg [OPENFLOW_WILDCARD_TABLE_SIZE-1:0]                    wildcard_hit_address_decoded;
    wire [OPENFLOW_WILDCARD_TABLE_SIZE*PKT_SIZE_WIDTH - 1:0]  wildcard_hit_address_decoded_expanded;
@@ -148,11 +141,10 @@
 
    wildcard_lut_action
      #(.CMP_WIDTH (OPENFLOW_ENTRY_WIDTH),
-       .DATA_WIDTH (`OPENFLOW_ACTION_WIDTH),
-       .LUT_DEPTH  (OPENFLOW_WILDCARD_TABLE_SIZE),
-       .TAG (OPENFLOW_WILDCARD_LOOKUP_BLOCK_ADDR),
-       .REG_ADDR_WIDTH (OPENFLOW_WILDCARD_LOOKUP_REG_ADDR_WIDTH),
-       .CURRENT_TABLE_ID(CURRENT_TABLE_ID)
+       .DATA_WIDTH         (`OPENFLOW_ACTION_WIDTH),
+       .LUT_DEPTH          (OPENFLOW_WILDCARD_TABLE_SIZE),
+       .LUT_DEPTH_BITS     (OPENFLOW_WILDCARD_TABLE_DEPTH),
+       .CURRENT_TABLE_ID   (CURRENT_TABLE_ID)
        )wildcard_lut_action
          (// --- Interface for lookups
           .lookup_req          (flow_entry_vld),
@@ -178,7 +170,7 @@
 
 
           // --- Watchdog Timer Interface
-          .table_flush         (table_flush),
+          .table_flush         (0),
 
           // --- Misc
           .reset               (reset),
@@ -191,7 +183,7 @@
    #(
       .CMP_WIDTH (OPENFLOW_ENTRY_WIDTH),
       .DEPTH (OPENFLOW_WILDCARD_TABLE_SIZE),
-      .DEPTH_BITS (log2(OPENFLOW_WILDCARD_TABLE_SIZE)),
+      .DEPTH_BITS (OPENFLOW_WILDCARD_TABLE_DEPTH),
       .ENCODE (0),
       .CURRENT_TABLE_ID(CURRENT_TABLE_ID)
    ) wildcard_tcam
@@ -206,10 +198,12 @@
       .cmp_din                          (cam_cmp_din),
       .cmp_req                          (flow_entry_vld),
 
-         .tcam_addr           (tcam_addr),
-         .tcam_data_in        (tcam_data_in),
-         .we                  (tcam_we      ),
-         .tcam_data_out       ( tcam_data_out)
+      .we                               (tcam_we),
+      .tcam_addr                        (tcam_addr),
+      .tcam_data_in                     (tcam_data_in),
+      .tcam_data_mask_in                (tcam_data_mask_in),
+      .tcam_data_out                    (tcam_data_out ),
+      .tcam_data_mask_out               (tcam_data_mask_out)
    );
 
    small_fifo
@@ -229,10 +223,10 @@
          );
 
     wildcard_counter
-    #(.ADDR_WIDTH(LUT_DEPTH_BITS),
+    #(.ADDR_WIDTH(OPENFLOW_WILDCARD_TABLE_DEPTH),
       .PKT_WIDTH(PKT_SIZE_WIDTH),
       .LUT_DEPTH(OPENFLOW_WILDCARD_TABLE_SIZE),
-      .DEPTH_BITS (log2(OPENFLOW_WILDCARD_TABLE_SIZE))
+      .DEPTH_BITS (OPENFLOW_WILDCARD_TABLE_DEPTH)
       )
      wildcard_counter
     (

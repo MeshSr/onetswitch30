@@ -46,7 +46,7 @@ module action_processor
    input                                   out_rdy,
 
    // --- interface to registers
-
+   input                                   config_sw_ok,
    // --- Misc
    input                                   clk,
    input                                   reset
@@ -257,13 +257,16 @@ module action_processor
                       else if(nf2_action_flag == 0 && !actions_hit)
                       begin
                          in_fifo_data_d1_nxt[`IOQ_DST_TABLE_ID_POS +:`IOQ_DST_TABLE_ID_LEN] = CURRENT_TABLE_ID + 1;
-                         /*if((CURRENT_TABLE_ID + 1)>TABLE_NUM)
-                                 case(src_port)
-                                 0:in_fifo_data_d1_nxt[`IOQ_DST_PORT_POS+7:`IOQ_DST_PORT_POS] =   8'b0000_0010;
-                                 2:in_fifo_data_d1_nxt[`IOQ_DST_PORT_POS+7:`IOQ_DST_PORT_POS] =   8'b0000_1000; 
-                                 4:in_fifo_data_d1_nxt[`IOQ_DST_PORT_POS+7:`IOQ_DST_PORT_POS] =   8'b0010_0000;
-                                 6:in_fifo_data_d1_nxt[`IOQ_DST_PORT_POS+7:`IOQ_DST_PORT_POS] =   8'b1000_0000;
-                                 endcase*/
+                           begin
+                           in_fifo_data_d1_nxt[`IOQ_DST_TABLE_ID_POS +:`IOQ_DST_TABLE_ID_LEN] = CURRENT_TABLE_ID + 1;
+                           if(((CURRENT_TABLE_ID + 1)>TABLE_NUM) && config_sw_ok)
+                                   case(src_port)
+                                   0:in_fifo_data_d1_nxt[`IOQ_DST_PORT_POS+7:`IOQ_DST_PORT_POS] =   8'b0000_0010;
+                                   2:in_fifo_data_d1_nxt[`IOQ_DST_PORT_POS+7:`IOQ_DST_PORT_POS] =   8'b0000_1000; 
+                                   4:in_fifo_data_d1_nxt[`IOQ_DST_PORT_POS+7:`IOQ_DST_PORT_POS] =   8'b0010_0000;
+                                   6:in_fifo_data_d1_nxt[`IOQ_DST_PORT_POS+7:`IOQ_DST_PORT_POS] =   8'b1000_0000;
+                                   endcase
+                            end
                       end
                       else in_fifo_data_d1_nxt[`IOQ_DST_TABLE_ID_POS +:`IOQ_DST_TABLE_ID_LEN] = 8'hFF;
                   end
@@ -293,13 +296,13 @@ module action_processor
                       else if(nf2_action_flag == 0 && !actions_hit)
                       begin
                          in_fifo_data_d1_nxt[`IOQ_DST_TABLE_ID_POS +:`IOQ_DST_TABLE_ID_LEN] = CURRENT_TABLE_ID + 1;
-                        /* if((CURRENT_TABLE_ID + 1)>TABLE_NUM)
-                                 case(src_port)
-                                 0:in_fifo_data_d1_nxt[`IOQ_DST_PORT_POS+7:`IOQ_DST_PORT_POS] =   8'b0000_0010;
-                                 2:in_fifo_data_d1_nxt[`IOQ_DST_PORT_POS+7:`IOQ_DST_PORT_POS] =   8'b0000_1000; 
-                                 4:in_fifo_data_d1_nxt[`IOQ_DST_PORT_POS+7:`IOQ_DST_PORT_POS] =   8'b0010_0000;
-                                 6:in_fifo_data_d1_nxt[`IOQ_DST_PORT_POS+7:`IOQ_DST_PORT_POS] =   8'b1000_0000;
-                                 endcase*/
+                         if(((CURRENT_TABLE_ID + 1)>TABLE_NUM) && config_sw_ok)
+                                  case(src_port)
+                                  0:in_fifo_data_d1_nxt[`IOQ_DST_PORT_POS+7:`IOQ_DST_PORT_POS] =   8'b0000_0010;
+                                  2:in_fifo_data_d1_nxt[`IOQ_DST_PORT_POS+7:`IOQ_DST_PORT_POS] =   8'b0000_1000; 
+                                  4:in_fifo_data_d1_nxt[`IOQ_DST_PORT_POS+7:`IOQ_DST_PORT_POS] =   8'b0010_0000;
+                                  6:in_fifo_data_d1_nxt[`IOQ_DST_PORT_POS+7:`IOQ_DST_PORT_POS] =   8'b1000_0000;
+                                  endcase
                       end
                   end
               else if(cur_st==PKT_METADATA)
@@ -366,13 +369,13 @@ module action_processor
                    else if(nf2_action_flag == 0 && !actions_hit)
                    begin
                       in_fifo_data_d1_nxt[`IOQ_DST_TABLE_ID_POS +:`IOQ_DST_TABLE_ID_LEN] = CURRENT_TABLE_ID + 1;
-                      /*if((CURRENT_TABLE_ID + 1)>TABLE_NUM)
+                      if(((CURRENT_TABLE_ID + 1)>TABLE_NUM) && config_sw_ok)
                               case(src_port)
                               0:in_fifo_data_d1_nxt[`IOQ_DST_PORT_POS+7:`IOQ_DST_PORT_POS] =   8'b0000_0010;
                               2:in_fifo_data_d1_nxt[`IOQ_DST_PORT_POS+7:`IOQ_DST_PORT_POS] =   8'b0000_1000; 
                               4:in_fifo_data_d1_nxt[`IOQ_DST_PORT_POS+7:`IOQ_DST_PORT_POS] =   8'b0010_0000;
                               6:in_fifo_data_d1_nxt[`IOQ_DST_PORT_POS+7:`IOQ_DST_PORT_POS] =   8'b1000_0000;
-                              endcase*/
+                              endcase
                    end
                end
           else if(cur_st==PKT_METADATA_D &&  in_fifo_ctrl_d1==`METEDATA_NUM)

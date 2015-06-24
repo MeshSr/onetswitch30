@@ -138,8 +138,8 @@ module user_data_path
      output                             reg_ack,
      input                              reg_rd_wr_L,
      input  [31:0]                      reg_addr,
-     output [`CPCI_NF2_DATA_WIDTH-1:0]  reg_rd_data,
-     input [`CPCI_NF2_DATA_WIDTH-1:0]   reg_wr_data,
+     output [31:0]                      reg_rd_data,
+     input  [31:0]                      reg_wr_data,
 
      // misc
      input                              reset,
@@ -148,20 +148,8 @@ module user_data_path
      input                              sim_start
      );
 
-
-   function integer log2;
-      input integer number;
-      begin
-         log2=0;
-         while(2**log2<number) begin
-            log2=log2+1;
-         end
-      end
-   endfunction // log2
-
    //---------- Internal parameters -----------
 
-   localparam NUM_IQ_BITS = log2(NUM_INPUT_QUEUES);
 
    localparam IN_ARB_STAGE_NUM = 2;
    localparam OP_LUT_STAGE_NUM = 4;
@@ -260,55 +248,63 @@ module user_data_path
    wire [`CPCI_NF2_DATA_WIDTH-1:0]  udp_reg_data_in;
    wire [UDP_REG_SRC_WIDTH-1:0]     udp_reg_src_in;*/
    
-   wire   [31:0]                    data_output_port_lookup_o [2:0];
-   wire   [31:0]                    addr_output_port_lookup_o [2:0];
-   wire                             req_output_port_lookup_o  [2:0];
-   wire                             rw_output_port_lookup_o   [2:0]; 
-   wire                             ack_output_port_lookup_i  [2:0];  
-   wire   [31:0]                    data_output_port_lookup_i [2:0];
-    wire   [31:0]                    data_output_port_lookup_0_o ;
-    wire   [31:0]                    data_output_port_lookup_1_o ;
-    wire   [31:0]                    data_output_port_lookup_2_o ;
-    wire   [31:0]                    data_meter_o                ;
-    wire   [31:0]                    data_output_queues_o        ;
-    
-    wire   [31:0]                    addr_output_port_lookup_0_o ;
-    wire   [31:0]                    addr_output_port_lookup_1_o ;
-    wire   [31:0]                    addr_output_port_lookup_2_o ;
-    wire   [31:0]                    addr_meter_o                ;
-    wire   [31:0]                    addr_output_queues_o        ;
-    
-    wire                             req_output_port_lookup_0_o  ;
-    wire                             req_output_port_lookup_1_o  ;
-    wire                             req_output_port_lookup_2_o  ;
-    wire                             req_meter_o                 ;
-    wire                             req_output_queues_o         ;
-    
-    wire                             rw_output_port_lookup_0_o   ;
-    wire                             rw_output_port_lookup_1_o   ;
-    wire                             rw_output_port_lookup_2_o   ;
-    wire                             rw_meter_o                  ;
-    wire                             rw_output_queues_o          ;
-          
-    wire                             ack_output_port_lookup_0_i  ;
-    wire                             ack_output_port_lookup_1_i  ;
-    wire                             ack_output_port_lookup_2_i  ;
-    wire                             ack_meter_i                 ;
-    wire                             ack_output_queues_i         ;     
-    
-    wire   [31:0]                     data_output_port_lookup_0_i;
-    wire   [31:0]                     data_output_port_lookup_1_i;
-    wire   [31:0]                     data_output_port_lookup_2_i;
-    wire   [31:0]                     data_meter_i               ;
-    wire   [31:0]                     data_output_queues_i       ;
+   wire   [31:0]                    data_output_port_lookup_o ;
+   wire   [31:0]                    addr_output_port_lookup_o ;
+   wire                             req_output_port_lookup_o  ;
+   wire                             rw_output_port_lookup_o   ; 
+   //wire                             ack_output_port_lookup_i  [2:0];  
+   //wire   [31:0]                    data_output_port_lookup_i [2:0];
+   wire   [31:0]                    data_output_port_lookup_0_o ;
+   wire   [31:0]                    data_output_port_lookup_1_o ;
+   wire   [31:0]                    data_output_port_lookup_2_o ;
+   wire   [31:0]                    data_meter_o                ;
+   wire   [31:0]                    data_output_queues_o        ;
+   wire   [31:0]                    data_config_o               ;
+   
+   wire   [31:0]                    addr_output_port_lookup_0_o ;
+   wire   [31:0]                    addr_output_port_lookup_1_o ;
+   wire   [31:0]                    addr_output_port_lookup_2_o ;
+   wire   [31:0]                    addr_meter_o                ;
+   wire   [31:0]                    addr_output_queues_o        ;
+   wire   [31:0]                    addr_config_o               ;
+   
+   wire                             req_output_port_lookup_0_o  ;
+   wire                             req_output_port_lookup_1_o  ;
+   wire                             req_output_port_lookup_2_o  ;
+   wire                             req_meter_o                 ;
+   wire                             req_output_queues_o         ;
+   wire                             req_config_o                ;
+   
+   wire                             rw_output_port_lookup_0_o   ;
+   wire                             rw_output_port_lookup_1_o   ;
+   wire                             rw_output_port_lookup_2_o   ;
+   wire                             rw_meter_o                  ;
+   wire                             rw_output_queues_o          ;
+   wire                             rw_config_o                 ;
+         
+   wire                             ack_output_port_lookup_0_i  ;
+   wire                             ack_output_port_lookup_1_i  ;
+   wire                             ack_output_port_lookup_2_i  ;
+   wire                             ack_meter_i                 ;
+   wire                             ack_output_queues_i         ;
+   wire                             ack_config_i                ;     
+   
+   wire   [31:0]                     data_output_port_lookup_0_i;
+   wire   [31:0]                     data_output_port_lookup_1_i;
+   wire   [31:0]                     data_output_port_lookup_2_i;
+   wire   [31:0]                     data_meter_i               ;
+   wire   [31:0]                     data_output_queues_i       ;
+   wire   [31:0]                     data_config_i              ;
+   
+   wire                              config_sw_ok; 
    
    //--------- Connect the data path -----------
 
    input_arbiter
-     #(.DATA_WIDTH(DATA_WIDTH),
-       .CTRL_WIDTH(CTRL_WIDTH),
-       .UDP_REG_SRC_WIDTH (UDP_REG_SRC_WIDTH),
-       .STAGE_NUMBER(IN_ARB_STAGE_NUM))
+   #(.DATA_WIDTH(DATA_WIDTH),
+     .CTRL_WIDTH(CTRL_WIDTH),
+     .UDP_REG_SRC_WIDTH (UDP_REG_SRC_WIDTH),
+     .STAGE_NUMBER(IN_ARB_STAGE_NUM))
    input_arbiter
      (
     .out_data             (vlan_rm_in_data),
@@ -380,26 +376,26 @@ module user_data_path
    vlan_remover
      #(.DATA_WIDTH(DATA_WIDTH),
        .CTRL_WIDTH(CTRL_WIDTH))
-       vlan_remover
-         (// --- Interface to previous module
-          .in_data            (vlan_rm_in_data),
-          .in_ctrl            (vlan_rm_in_ctrl),
-          .in_wr              (vlan_rm_in_wr),
-          .in_rdy             (vlan_rm_in_rdy),
+   vlan_remover
+   (// --- Interface to previous module
+    .in_data            (vlan_rm_in_data),
+    .in_ctrl            (vlan_rm_in_ctrl),
+    .in_wr              (vlan_rm_in_wr),
+    .in_rdy             (vlan_rm_in_rdy),
 
-          // --- Interface to next module
-          .out_data           (op_lut_in_data[0]),
-          .out_ctrl           (op_lut_in_ctrl[0]),
-          .out_wr             (op_lut_in_wr  [0]),
-          .out_rdy            (op_lut_in_rdy [0]),
+    // --- Interface to next module
+    .out_data           (op_lut_in_data[0]),
+    .out_ctrl           (op_lut_in_ctrl[0]),
+    .out_wr             (op_lut_in_wr  [0]),
+    .out_rdy            (op_lut_in_rdy [0]),
 
 
-          // --- Misc
-          .reset              (reset),
-          .clk                (clk)
-          );
+    // --- Misc
+    .reset              (reset),
+    .clk                (clk)
+    );
 
-   assign data_output_port_lookup_o [0] = data_output_port_lookup_0_o   ;
+   /*assign data_output_port_lookup_o [0] = data_output_port_lookup_0_o   ;
    assign addr_output_port_lookup_o [0] = addr_output_port_lookup_0_o   ;
    assign req_output_port_lookup_o  [0] = req_output_port_lookup_0_o    ;
    assign rw_output_port_lookup_o   [0] = rw_output_port_lookup_0_o     ;
@@ -418,7 +414,14 @@ module user_data_path
    assign req_output_port_lookup_o  [2] = req_output_port_lookup_2_o    ;
    assign rw_output_port_lookup_o   [2] = rw_output_port_lookup_2_o     ;
    assign ack_output_port_lookup_2_i    = ack_output_port_lookup_i  [2] ;
-   assign data_output_port_lookup_2_i   = data_output_port_lookup_i [2] ;   
+   assign data_output_port_lookup_2_i   = data_output_port_lookup_i [2] ;*/   
+   
+   //wire [9:0]OPENFLOW_WILDCARD_TABLE_SIZE [2:0];
+   /*localparam OPENFLOW_WILDCARD_TABLE_SIZE[0]=`T0_OPENFLOW_WILDCARD_TABLE_SIZE;
+   localparam OPENFLOW_WILDCARD_TABLE_SIZE[1]=`T1_OPENFLOW_WILDCARD_TABLE_SIZE;
+   localparam OPENFLOW_WILDCARD_TABLE_SIZE[2]=`T2_OPENFLOW_WILDCARD_TABLE_SIZE;*/
+   wire [`TABLE_NUM-1:0]   ack_output_port_lookup_i_hub;
+   wire [31:0]            data_output_port_lookup_i_hub [`TABLE_NUM-1:0];
       
    generate 
       genvar i;
@@ -428,14 +431,7 @@ module user_data_path
          #(
             .DATA_WIDTH                               (DATA_WIDTH),
             .CTRL_WIDTH                               (CTRL_WIDTH),
-            .UDP_REG_SRC_WIDTH                        (UDP_REG_SRC_WIDTH),
-            .STAGE_NUM                                (OP_LUT_STAGE_NUM),
             .NUM_OUTPUT_QUEUES                        (NUM_OUTPUT_QUEUES),
-            .NUM_IQ_BITS                              (NUM_IQ_BITS),
-            .OPENFLOW_LOOKUP_REG_ADDR_WIDTH           (`T0_OPENFLOW_LOOKUP_REG_ADDR_WIDTH),
-            .OPENFLOW_LOOKUP_BLOCK_ADDR               (`T0_OPENFLOW_LOOKUP_BLOCK_ADDR+i),
-            .OPENFLOW_WILDCARD_LOOKUP_REG_ADDR_WIDTH  (`T0_OPENFLOW_WILDCARD_LOOKUP_REG_ADDR_WIDTH),
-            .OPENFLOW_WILDCARD_LOOKUP_BLOCK_ADDR      (`T0_OPENFLOW_WILDCARD_LOOKUP_BLOCK_ADDR+i),
             .OPENFLOW_ENTRY_WIDTH                     (`T0_OPENFLOW_ENTRY_WIDTH),
             .OPENFLOW_WILDCARD_TABLE_SIZE             (`T0_OPENFLOW_WILDCARD_TABLE_SIZE),
             .CURRENT_TABLE_ID                         (i),
@@ -455,13 +451,14 @@ module user_data_path
            .in_rdy            (op_lut_in_rdy  [i]),
 
            // --- Register interface
-           .data_output_port_lookup_i  (data_output_port_lookup_o[i]) ,
-           .addr_output_port_lookup_i  (addr_output_port_lookup_o[i]) ,
-           .req_output_port_lookup_i   (req_output_port_lookup_o [i]) ,
-           .rw_output_port_lookup_i    (rw_output_port_lookup_o  [i]) ,
-           .ack_output_port_lookup_o   (ack_output_port_lookup_i [i]) ,
-           .data_output_port_lookup_o  (data_output_port_lookup_i[i]) ,
+           .data_output_port_lookup_i  (data_output_port_lookup_o) ,
+           .addr_output_port_lookup_i  (addr_output_port_lookup_o) ,
+           .req_output_port_lookup_i   (req_output_port_lookup_o ) ,
+           .rw_output_port_lookup_i    (rw_output_port_lookup_o  ) ,
+           .ack_output_port_lookup_o   (ack_output_port_lookup_i_hub[i] ) ,
+           .data_output_port_lookup_o  (data_output_port_lookup_i_hub[i]) ,
            
+           .config_sw_ok      (config_sw_ok),
 
            // --- watchdog interface
            .table_flush       (1'b0),
@@ -472,168 +469,95 @@ module user_data_path
          );         
       end
    endgenerate  
-/*
-   output_port_lookup
-   #(.DATA_WIDTH(DATA_WIDTH),
-      .CTRL_WIDTH(CTRL_WIDTH),
-      .UDP_REG_SRC_WIDTH (UDP_REG_SRC_WIDTH),
-      .STAGE_NUM(OP_LUT_STAGE_NUM),
-      .NUM_OUTPUT_QUEUES(NUM_OUTPUT_QUEUES),
-      .NUM_IQ_BITS(NUM_IQ_BITS),
-      .OPENFLOW_LOOKUP_REG_ADDR_WIDTH(`T0_OPENFLOW_LOOKUP_REG_ADDR_WIDTH),
-      .OPENFLOW_LOOKUP_BLOCK_ADDR(`T0_OPENFLOW_LOOKUP_BLOCK_ADDR),
-      .OPENFLOW_WILDCARD_LOOKUP_REG_ADDR_WIDTH(`T0_OPENFLOW_WILDCARD_LOOKUP_REG_ADDR_WIDTH),
-      .OPENFLOW_WILDCARD_LOOKUP_BLOCK_ADDR(`T0_OPENFLOW_WILDCARD_LOOKUP_BLOCK_ADDR),
-      .OPENFLOW_ENTRY_WIDTH (`T0_OPENFLOW_ENTRY_WIDTH),
-      .OPENFLOW_WILDCARD_TABLE_SIZE (`T0_OPENFLOW_WILDCARD_TABLE_SIZE),
-      .CURRENT_TABLE_ID (0),
-      .TABLE_NUM(`TABLE_NUM-1)
+
+   /*output_lookup_reg_hub 
+   #(
+      .TABLE_NUM  (TABLE_NUM)
    )
-   output_port_lookup_0
-    (// --- Interface to next module
-     .out_data          (op_lut_in_data_2),
-     .out_ctrl          (op_lut_in_ctrl_2),
-     .out_wr            (op_lut_in_wr_2),
-     .out_rdy           (op_lut_in_rdy_2),
-
-     // --- Interface to previous module
-     .in_data           (op_lut_in_data),
-     .in_ctrl           (op_lut_in_ctrl),
-     .in_wr             (op_lut_in_wr),
-     .in_rdy            (op_lut_in_rdy),
-
-     // --- Register interface
-     .data_output_port_lookup_i  (data_output_port_lookup_0_o) ,
-     .addr_output_port_lookup_i  (addr_output_port_lookup_0_o) ,
-     .req_output_port_lookup_i   (req_output_port_lookup_0_o ) ,
-     .rw_output_port_lookup_i    (rw_output_port_lookup_0_o  ) ,
-     .ack_output_port_lookup_o   (ack_output_port_lookup_0_i ) ,
-     .data_output_port_lookup_o  (data_output_port_lookup_0_i) ,
-     
-
-     // --- watchdog interface
-     .table_flush       (1'b0),
-
-     // --- Misc
-     .clk               (clk),
-     .reset             (reset)
-   );
-   output_port_lookup
-   #(.DATA_WIDTH(DATA_WIDTH),
-      .CTRL_WIDTH(CTRL_WIDTH),
-      .UDP_REG_SRC_WIDTH (UDP_REG_SRC_WIDTH),
-      .STAGE_NUM(OP_LUT_STAGE_NUM),
-      .NUM_OUTPUT_QUEUES(NUM_OUTPUT_QUEUES),
-      .NUM_IQ_BITS(NUM_IQ_BITS),
-      .OPENFLOW_LOOKUP_REG_ADDR_WIDTH(`T1_OPENFLOW_LOOKUP_REG_ADDR_WIDTH),
-      .OPENFLOW_LOOKUP_BLOCK_ADDR(`T1_OPENFLOW_LOOKUP_BLOCK_ADDR),
-      .OPENFLOW_WILDCARD_LOOKUP_REG_ADDR_WIDTH(`T1_OPENFLOW_WILDCARD_LOOKUP_REG_ADDR_WIDTH),
-      .OPENFLOW_WILDCARD_LOOKUP_BLOCK_ADDR(`T1_OPENFLOW_WILDCARD_LOOKUP_BLOCK_ADDR),
-      .OPENFLOW_ENTRY_WIDTH (`T1_OPENFLOW_ENTRY_WIDTH),
-      .OPENFLOW_WILDCARD_TABLE_SIZE (`T1_OPENFLOW_WILDCARD_TABLE_SIZE),
-      .CURRENT_TABLE_ID (1),
-      .TABLE_NUM(`TABLE_NUM-1)
-   )
-   output_port_lookup_1
-    (// --- Interface to next module
-     .out_data          (op_lut_in_data_3),
-     .out_ctrl          (op_lut_in_ctrl_3),
-     .out_wr            (op_lut_in_wr_3),
-     .out_rdy           (op_lut_in_rdy_3),
-
-     // --- Interface to previous module
-     .in_data           (op_lut_in_data_2),
-     .in_ctrl           (op_lut_in_ctrl_2),
-     .in_wr             (op_lut_in_wr_2),
-     .in_rdy            (op_lut_in_rdy_2),
-
-     // --- Register interface
-     .data_output_port_lookup_i  (data_output_port_lookup_1_o) ,
-     .addr_output_port_lookup_i  (addr_output_port_lookup_1_o),
-     .req_output_port_lookup_i   (req_output_port_lookup_1_o ),
-     .rw_output_port_lookup_i    (rw_output_port_lookup_1_o  ),
-     .ack_output_port_lookup_o   (ack_output_port_lookup_1_i ),
-     .data_output_port_lookup_o  (data_output_port_lookup_1_i),
-     
-     // --- watchdog interface
-     .table_flush       (1'b0),
-
-     // --- Misc
-     .clk               (clk),
-     .reset             (reset)
-   );
+   output_lookup_reg_hub
+   (
+      .req_output_port_lookup_i   (req_output_port_lookup_o ) ,   
+      .addr_output_port_lookup_i  (addr_output_port_lookup_o) ,
+      .ack_output_port_lookup_i   (ack_output_port_lookup_i_hub ) ,
+      .data_output_port_lookup_i  (data_output_port_lookup_i_hub),
+      .ack_output_port_lookup_o   (ack_output_port_lookup_i),
+      .data_output_port_lookup_o  (data_output_port_lookup_i),
+      .clk     (clk),
+      .reset   (reset)
    
-      output_port_lookup
-   #(.DATA_WIDTH(DATA_WIDTH),
-      .CTRL_WIDTH(CTRL_WIDTH),
-      .UDP_REG_SRC_WIDTH (UDP_REG_SRC_WIDTH),
-      .STAGE_NUM(OP_LUT_STAGE_NUM),
-      .NUM_OUTPUT_QUEUES(NUM_OUTPUT_QUEUES),
-      .NUM_IQ_BITS(NUM_IQ_BITS),
-      .OPENFLOW_LOOKUP_REG_ADDR_WIDTH(`T2_OPENFLOW_LOOKUP_REG_ADDR_WIDTH),
-      .OPENFLOW_LOOKUP_BLOCK_ADDR(`T2_OPENFLOW_LOOKUP_BLOCK_ADDR),
-      .OPENFLOW_WILDCARD_LOOKUP_REG_ADDR_WIDTH(`T2_OPENFLOW_WILDCARD_LOOKUP_REG_ADDR_WIDTH),
-      .OPENFLOW_WILDCARD_LOOKUP_BLOCK_ADDR(`T2_OPENFLOW_WILDCARD_LOOKUP_BLOCK_ADDR),
-      .OPENFLOW_ENTRY_WIDTH (`T2_OPENFLOW_ENTRY_WIDTH),
-      .OPENFLOW_WILDCARD_TABLE_SIZE (`T2_OPENFLOW_WILDCARD_TABLE_SIZE),
-      .CURRENT_TABLE_ID (2),
-      .TABLE_NUM(`TABLE_NUM-1)
-   )
-  output_port_lookup_2
-   (// --- Interface t o next module
-     .out_data          (vlan_add_in_data),
-     .out_ctrl          (vlan_add_in_ctrl),
-     .out_wr            (vlan_add_in_wr),
-     .out_rdy           (vlan_add_in_rdy),
-
-     // --- Interface to previous module
-     .in_data           (op_lut_in_data_3),
-     .in_ctrl           (op_lut_in_ctrl_3),
-     .in_wr             (op_lut_in_wr_3),
-     .in_rdy            (op_lut_in_rdy_3),
-
-     // --- Register interface
-     .data_output_port_lookup_i  (data_output_port_lookup_2_o) ,
-     .addr_output_port_lookup_i  (addr_output_port_lookup_2_o),
-     .req_output_port_lookup_i   (req_output_port_lookup_2_o ),
-     .rw_output_port_lookup_i    (rw_output_port_lookup_2_o  ),
-     .ack_output_port_lookup_o   (ack_output_port_lookup_2_i ),
-     .data_output_port_lookup_o  (data_output_port_lookup_2_i),
-
-
-     // --- watchdog interface
-     .table_flush       (1'b0),
-
-     // --- Misc
-     .clk               (clk),
-     .reset             (reset)
+   
    );*/
+   reg ack_output_port_lookup_i;
+   reg [31:0]data_output_port_lookup_i;
+   reg [2:0]cur_st,nxt_st;
+   reg [`TABLE_NUM-1:0]addr;
    
-   
+   localparam    IDLE=0,
+                 WAIT_ACK=1,
+                 ACK=2;
+                 
+   always@(posedge clk)
+     if(reset)
+        cur_st<=0;
+     else cur_st<=nxt_st;
+  
+  
+   always@(*)
+   begin
+     nxt_st=cur_st;
+     case(cur_st)
+        IDLE:
+           if(req_output_port_lookup_o) nxt_st=WAIT_ACK;
+        WAIT_ACK:
+           if(ack_output_port_lookup_i_hub[addr]) nxt_st=ACK;
+        ACK:
+           nxt_st=IDLE;
+        default:nxt_st=IDLE;
+     endcase
+  end
+  
+  always@(posedge clk)
+     if(reset)
+        addr<=0;
+     else if(cur_st==IDLE && req_output_port_lookup_o)
+        addr<=addr_output_port_lookup_o[`TABLE_ID_POS+`TABLE_ID_WIDTH-1:`TABLE_ID_POS];
+           
+  always@(posedge clk)
+     if(reset)
+        ack_output_port_lookup_i<=0;
+     else if(cur_st==ACK)
+        ack_output_port_lookup_i<=1;
+     else ack_output_port_lookup_i<=0;
+     
+     
+  always@(posedge clk)
+     if(reset)
+        data_output_port_lookup_i<=0;
+     else if(cur_st==ACK)
+        data_output_port_lookup_i<=data_output_port_lookup_i_hub[addr];
+        
+           
    vlan_adder
-     #(.DATA_WIDTH(DATA_WIDTH),
-       .CTRL_WIDTH(CTRL_WIDTH))
-       vlan_adder
-         (// --- Interface to previous module
-/*          .in_data            (vlan_add_in_data),
-          .in_ctrl            (vlan_add_in_ctrl),
-          .in_wr              (vlan_add_in_wr),
-          .in_rdy             (vlan_add_in_rdy),*/
-          .in_data            (op_lut_in_data[`TABLE_NUM]),
-          .in_ctrl            (op_lut_in_ctrl[`TABLE_NUM]),
-          .in_wr              (op_lut_in_wr  [`TABLE_NUM]),
-          .in_rdy             (op_lut_in_rdy [`TABLE_NUM]),
-
-          // --- Interface to next module
-         .out_data             (rate_limiter_in_data),
-         .out_ctrl             (rate_limiter_in_ctrl),
-         .out_wr               (rate_limiter_in_wr),
-         .out_rdy              (rate_limiter_in_rdy),
-
-          // --- Misc
-          .reset              (reset),
-          .clk                (clk)
-          );
+   #(.DATA_WIDTH(DATA_WIDTH),
+     .CTRL_WIDTH(CTRL_WIDTH))
+   vlan_adder
+   (// --- Interface to previous module
+      .in_data            (op_lut_in_data[`TABLE_NUM]),
+      .in_ctrl            (op_lut_in_ctrl[`TABLE_NUM]),
+      .in_wr              (op_lut_in_wr  [`TABLE_NUM]),
+      .in_rdy             (op_lut_in_rdy [`TABLE_NUM]),
+   
+       // --- Interface to next module
+      .out_data             (rate_limiter_in_data),
+      .out_ctrl             (rate_limiter_in_ctrl),
+      .out_wr               (rate_limiter_in_wr),
+      .out_rdy              (rate_limiter_in_rdy),
+   
+      // --- Misc
+      .reset              (reset),
+      .clk                (clk)
+   );
+          
    meter_lite meter_lite (
       // --- Interface to the previous module
       .in_data                            (rate_limiter_in_data),
@@ -740,7 +664,11 @@ module user_data_path
 
 
 
-   udp_reg_master  udp_reg_master 
+   udp_reg_master
+   #(
+      .TABLE_NUM  (`TABLE_NUM-1)
+   )
+    udp_reg_master 
    (
      .reg_req_in                            (reg_req),
      .reg_ack                               (reg_ack),
@@ -749,41 +677,47 @@ module user_data_path
      .reg_data_in                           (reg_wr_data),
      .reg_rd_data                           (reg_rd_data),
 
-     .data_output_port_lookup_0_o            (data_output_port_lookup_0_o) ,
-     .data_output_port_lookup_1_o            (data_output_port_lookup_1_o) ,
-     .data_output_port_lookup_2_o            (data_output_port_lookup_2_o) ,
+     .data_output_port_lookup_o            (data_output_port_lookup_o) ,
+     /*.data_output_port_lookup_1_o            (data_output_port_lookup_1_o) ,
+     .data_output_port_lookup_2_o            (data_output_port_lookup_2_o) ,*/
      .data_meter_o                           (data_meter_o               ) ,
      .data_output_queues_o                   (data_output_queues_o       ) ,
+     .data_config_o                          (data_config_o              ) ,
                                             
-     .addr_output_port_lookup_0_o            (addr_output_port_lookup_0_o) ,
-     .addr_output_port_lookup_1_o            (addr_output_port_lookup_1_o) ,
-     .addr_output_port_lookup_2_o            (addr_output_port_lookup_2_o) ,
+     .addr_output_port_lookup_o            (addr_output_port_lookup_o) ,
+     /*.addr_output_port_lookup_1_o            (addr_output_port_lookup_1_o) ,
+     .addr_output_port_lookup_2_o            (addr_output_port_lookup_2_o) ,*/
      .addr_meter_o                           (addr_meter_o               ) ,
      .addr_output_queues_o                   (addr_output_queues_o       ) ,
+     .addr_config_o                          (addr_config_o              ) ,
                                             
-     .req_output_port_lookup_0_o             (req_output_port_lookup_0_o ),
-     .req_output_port_lookup_1_o             (req_output_port_lookup_1_o ),
-     .req_output_port_lookup_2_o             (req_output_port_lookup_2_o ),
+     .req_output_port_lookup_o             (req_output_port_lookup_o ),
+     /*.req_output_port_lookup_1_o             (req_output_port_lookup_1_o ),
+     .req_output_port_lookup_2_o             (req_output_port_lookup_2_o ),*/
      .req_meter_o                            (req_meter_o                ) ,
      .req_output_queues_o                    (req_output_queues_o        ) ,
+     .req_config_o                           (req_config_o               ) ,
                                             
-     .rw_output_port_lookup_0_o              (rw_output_port_lookup_0_o  ) ,
-     .rw_output_port_lookup_1_o              (rw_output_port_lookup_1_o  ) ,
-     .rw_output_port_lookup_2_o              (rw_output_port_lookup_2_o  ) ,
+     .rw_output_port_lookup_o              (rw_output_port_lookup_o  ) ,
+     /*.rw_output_port_lookup_1_o              (rw_output_port_lookup_1_o  ) ,
+     .rw_output_port_lookup_2_o              (rw_output_port_lookup_2_o  ) ,*/
      .rw_meter_o                             (rw_meter_o                 ) ,
      .rw_output_queues_o                     (rw_output_queues_o         ) ,
+     .rw_config_o                            (rw_config_o                ) ,
                                             
-     .ack_output_port_lookup_0_i             (ack_output_port_lookup_0_i ) ,
-     .ack_output_port_lookup_1_i             (ack_output_port_lookup_1_i ) ,
-     .ack_output_port_lookup_2_i             (ack_output_port_lookup_2_i ) ,
+     .ack_output_port_lookup_i             (ack_output_port_lookup_i ) ,
+     /*.ack_output_port_lookup_1_i             (ack_output_port_lookup_1_i ) ,
+     .ack_output_port_lookup_2_i             (ack_output_port_lookup_2_i ) ,*/
      .ack_meter_i                            (ack_meter_i                ) ,
-     .ack_output_queues_i                    (ack_output_queues_i        ) ,     
+     .ack_output_queues_i                    (ack_output_queues_i        ) ,
+     .ack_config_i                           (ack_config_i               ) ,     
                                             
-     .data_output_port_lookup_0_i            (data_output_port_lookup_0_i) ,
-     .data_output_port_lookup_1_i            (data_output_port_lookup_1_i) ,
-     .data_output_port_lookup_2_i            (data_output_port_lookup_2_i) ,
+     .data_output_port_lookup_i            (data_output_port_lookup_i) ,
+     /*.data_output_port_lookup_1_i            (data_output_port_lookup_1_i) ,
+     .data_output_port_lookup_2_i            (data_output_port_lookup_2_i) ,*/
      .data_meter_i                           (data_meter_i               ) ,
      .data_output_queues_i                   (data_output_queues_i       ) ,
+     .data_config_i                          (data_config_i              ) ,
     
      //
      .clk                                   (clk),
@@ -791,7 +725,20 @@ module user_data_path
      );
           
 
-     
+    configuration configuration
+   (
+      .data_config_i  (data_config_o),
+      .addr_config_i  (addr_config_o),
+      .req_config_i   (req_config_o),
+      .rw_config_i    (rw_config_o),
+      .ack_config_o   (ack_config_i),
+      .data_config_o  (data_config_i),
+   
+      .clk     (clk),
+      .reset   (reset),
+      
+      .config_sw_ok  (config_sw_ok)
+   );
      
      /*monitor_reg monitor_reg
      (

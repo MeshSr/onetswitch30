@@ -252,7 +252,7 @@
                out_ctrl_nxt        = fifo_ctrl_out;
             end
          end // case: SEND_UNMODIFIED_PKT
-
+      default:process_state_nxt=WAIT_PREPROCESS;
       endcase // case(process_state)
    end // always @ (*)
 

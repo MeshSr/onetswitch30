@@ -194,9 +194,9 @@
 
 
 `define OPENFLOW_ENTRY_WIDTH_ALL                  248
-`define T0_OPENFLOW_ENTRY_WIDTH                   64+32
-`define T1_OPENFLOW_ENTRY_WIDTH                   64+32
-`define T2_OPENFLOW_ENTRY_WIDTH                   64+32
+`define T0_OPENFLOW_ENTRY_WIDTH                   64
+`define T1_OPENFLOW_ENTRY_WIDTH                   64
+`define T2_OPENFLOW_ENTRY_WIDTH                   64
 
 //Actions
 `define OPENFLOW_ACTION_WIDTH                     320

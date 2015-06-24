@@ -19,14 +19,7 @@
       parameter DATA_WIDTH = 32,
       parameter CMP_WIDTH = 64,
       parameter LUT_DEPTH  = 16,
-      parameter LUT_DEPTH_BITS = log2(LUT_DEPTH),
-      parameter DEFAULT_DATA = 0,                       // DATA to return on a miss
-      parameter RESET_DATA = {DATA_WIDTH{1'b0}},        // value of data on reset
-      parameter RESET_CMP_DATA = {CMP_WIDTH{1'b0}},     // value of compare data on reset
-      parameter RESET_CMP_DMASK = {CMP_WIDTH{1'b0}},    // value compare of data mask on reset
-      parameter UDP_REG_SRC_WIDTH = 2,                  // identifies which module started this request
-      parameter TAG = 0,                                // Tag identifying the address block
-      parameter REG_ADDR_WIDTH = 5,                      // Width of addresses in the same block
+      parameter LUT_DEPTH_BITS = 4,
       parameter CURRENT_TABLE_ID=0
       )
    (// --- Interface for lookups
@@ -139,7 +132,8 @@
    localparam  WAIT=0,
                MATCH_BUSY=1,
                MATCH=2,
-               DONE=3;
+               MATCH_WAIT=3,
+               DONE=4;
 
 
    reg [3:0]cur_st,nxt_st;   
@@ -161,67 +155,71 @@
                      else if(!cam_busy & lookup_req & skip_lookup)
                         nxt_st=DONE;
             MATCH_BUSY:nxt_st=WAIT;
-            MATCH:  nxt_st=DONE;
+            MATCH:  nxt_st=MATCH_WAIT;
+            MATCH_WAIT:nxt_st=DONE;
             DONE:   nxt_st=WAIT;
             default:nxt_st=WAIT;    
         endcase
      end
 
-     always@(*)
+     always@(posedge clk)
         if(reset)
-            lookup_ack=0;
+            lookup_ack<=0;
         else if(cur_st==DONE)   
-            lookup_ack=1;
+            lookup_ack<=1;
         else if(cur_st==MATCH_BUSY)
-            lookup_ack=1;
+            lookup_ack<=1;
         else
-            lookup_ack=0;
+            lookup_ack<=0;
 
-     always@(*)
+     always@(posedge clk)
         if(reset)
-            lookup_hit=0;
+            lookup_hit<=0;
         else if(cur_st==DONE)   
-            lookup_hit=cam_match;
+            lookup_hit<=cam_match;
         else if(MATCH_BUSY)
-            lookup_hit=0;
+            lookup_hit<=0;
         else
-            lookup_hit=0;
+            lookup_hit<=0;
             
-      always@(*)
+      always@(posedge clk)
       if(reset)
-         bram_cs_en=0;
+         bram_cs_en<=0;
+      //else if(bram_cs) bram_cs_en=1;
       else if(cur_st==MATCH)
-         bram_cs_en=1;
-      else bram_cs_en=bram_cs;
+         bram_cs_en<=1;
+      else bram_cs_en<=bram_cs;
       
-      always@(*)
+      always@(posedge clk)
       if(reset)
-         bram_we_en=0;
+         bram_we_en<=0;
+      //else if(bram_cs) bram_we_en=bram_we;
       else if(cur_st==MATCH)
-         bram_we_en=0;
-      else bram_we_en=bram_we;
+         bram_we_en<=0;
+      else bram_we_en<=bram_we;
       
-      always@(*)
+      always@(posedge clk)
       if(reset)
-         bram_addr_en=0;
+         bram_addr_en<=0;
+      //else if(bram_cs) bram_addr_en=bram_addr;
       else if(cur_st==MATCH)
-         bram_addr_en=cam_match_addr;
-      else bram_addr_en=bram_addr;
+         bram_addr_en<=cam_match_addr;
+      else bram_addr_en<=bram_addr;
 
-     always@(*)
+     always@(posedge clk)
         if(reset)
-            lookup_data=0;
+            lookup_data<=0;
         else
-            lookup_data=cam_match?lut_actions_out:0;
+            lookup_data<=cam_match?lut_actions_out:0;
             
-     always@(*)
+     always@(posedge clk)
         if(reset)
-            lookup_address=0;
+            lookup_address<=0;
         else if(cur_st==MATCH_BUSY)
-            lookup_address=0;
+            lookup_address<=0;
         else if(cur_st==DONE)   
-            lookup_address=cam_match?cam_match_addr:0;
-        else lookup_address=0;
+            lookup_address<=cam_match?cam_match_addr:0;
+        else lookup_address<=0;
             
 
 
@@ -333,3 +331,5 @@
    end // always @ (posedge clk)*/
 
 endmodule // cam_lut_sm
+
+

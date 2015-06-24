@@ -52,17 +52,7 @@
   module output_port_lookup
     #(parameter DATA_WIDTH = 64,
       parameter CTRL_WIDTH=DATA_WIDTH/8,
-      parameter UDP_REG_SRC_WIDTH = 2,
-      parameter IO_QUEUE_STAGE_NUM = `IO_QUEUE_STAGE_NUM,
       parameter NUM_OUTPUT_QUEUES = 8,
-      parameter NUM_IQ_BITS = 3,
-      parameter STAGE_NUM = 4,
-      parameter SRAM_ADDR_WIDTH = 19,
-      parameter CPU_QUEUE_NUM = 0,
-      parameter OPENFLOW_LOOKUP_REG_ADDR_WIDTH = 6,
-      parameter OPENFLOW_LOOKUP_BLOCK_ADDR = 13'h9,
-      parameter OPENFLOW_WILDCARD_LOOKUP_REG_ADDR_WIDTH = 10,
-      parameter OPENFLOW_WILDCARD_LOOKUP_BLOCK_ADDR = 13'h1,
       parameter OPENFLOW_ENTRY_WIDTH = 64,
       parameter OPENFLOW_WILDCARD_TABLE_SIZE = 16,
       parameter CURRENT_TABLE_ID = 0,
@@ -81,14 +71,14 @@
     output                             in_rdy,
     
     // --- Register interface
-    input [31:0] data_output_port_lookup_i,
-    input [31:0] addr_output_port_lookup_i,
-    input req_output_port_lookup_i,
-    input rw_output_port_lookup_i,
-    output ack_output_port_lookup_o,
-    output [31:0]data_output_port_lookup_o,
+    input [31:0]                       data_output_port_lookup_i,
+    input [31:0]                       addr_output_port_lookup_i,
+    input                              req_output_port_lookup_i,
+    input                              rw_output_port_lookup_i,
+    output                             ack_output_port_lookup_o,
+    output [31:0]                      data_output_port_lookup_o,
 
-    
+    input                           config_sw_ok,
     // --- Watchdog Timer Interface
     input                              table_flush,
 
@@ -100,65 +90,72 @@
    `CEILDIV_FUNC
 
    //-------------------- Internal Parameters ------------------------
-   localparam PKT_SIZE_WIDTH = 12;
+   localparam PKT_SIZE_WIDTH                 = 12;
+   localparam OPENFLOW_WILDCARD_TABLE_DEPTH  = log2(OPENFLOW_WILDCARD_TABLE_SIZE);
+   localparam OPENFLOW_ACTION_WIDTH          = `OPENFLOW_ACTION_WIDTH ;
+   localparam OPENFLOW_ENTRY_SRC_PORT_WIDTH  = `OPENFLOW_ENTRY_SRC_PORT_WIDTH ;
+   localparam PRIO_WIDTH                     = `PRIO_WIDTH ;
+   localparam ACTION_WIDTH                   = `ACTION_WIDTH ;
+   localparam OPENFLOW_ENTRY_WIDTH_ALL       = `OPENFLOW_ENTRY_WIDTH_ALL ;
 
    //------------------------ Wires/Regs -----------------------------
    // size is the action + input port
-   wire     [DATA_WIDTH-1:0]        wildcard_out_data;
-   wire     [CTRL_WIDTH-1:0]        wildcard_out_ctrl;
-   wire                             wildcard_out_wr;
-   wire                             wildcard_out_rdy;
+   wire  [DATA_WIDTH-1:0]                             wildcard_out_data    ;
+   wire  [CTRL_WIDTH-1:0]                             wildcard_out_ctrl    ;
+   wire                                               wildcard_out_wr      ;
+   wire                                               wildcard_out_rdy     ;
    
-   wire [`OPENFLOW_ACTION_WIDTH-1:0]actions;
-   wire                             actions_en;
+   wire  [OPENFLOW_ACTION_WIDTH-1:0]                  actions              ;
+   wire                                               actions_en           ;
    
-   wire [`OPENFLOW_ACTION_WIDTH-1:0]                          exact_data;
-   wire [`OPENFLOW_ACTION_WIDTH-1:0]                          wildcard_data;
+   wire  [OPENFLOW_ACTION_WIDTH-1:0]                  exact_data;
+   wire  [OPENFLOW_ACTION_WIDTH-1:0]                  wildcard_data;       
 
-   wire [CTRL_WIDTH-1:0]                                      in_fifo_ctrl;
-   wire [DATA_WIDTH-1:0]                                      in_fifo_data;
+   wire  [CTRL_WIDTH-1:0]                             in_fifo_ctrl         ;
+   wire  [DATA_WIDTH-1:0]                             in_fifo_data         ;
 
-   wire [OPENFLOW_ENTRY_WIDTH-1:0]                            flow_entry;
-   wire [`OPENFLOW_ENTRY_SRC_PORT_WIDTH-1:0]                  flow_entry_src_port_parsed;
-   wire [`OPENFLOW_ENTRY_SRC_PORT_WIDTH-1:0]                  flow_entry_src_port;
-   wire [PKT_SIZE_WIDTH-1:0]                                  pkt_size;
+   wire  [OPENFLOW_ENTRY_WIDTH+31:0]                   flow_entry                 ;
+   wire  [OPENFLOW_ENTRY_SRC_PORT_WIDTH-1:0]          flow_entry_src_port_parsed ;
+   wire  [OPENFLOW_ENTRY_SRC_PORT_WIDTH-1:0]          flow_entry_src_port        ;
+   wire  [PKT_SIZE_WIDTH-1:0]                         pkt_size                   ;
 
-   reg [31:0]                                                 s_counter;
-   reg [27:0]                                                 ns_counter;
+   reg   [31:0]                                       s_counter            ;
+   reg   [27:0]                                       ns_counter           ;
 
-//   wire [`OPENFLOW_ACTION_WIDTH-1:0]                          result_fifo_din;
-   wire [`OPENFLOW_ACTION_WIDTH-1:0]                          result_fifo_dout;
+   wire  [OPENFLOW_ACTION_WIDTH-1:0]                  result_fifo_dout     ;
 
-   wire [NUM_OUTPUT_QUEUES-1:0]                               pkts_dropped;
+   wire  [NUM_OUTPUT_QUEUES-1:0]                      pkts_dropped         ;
    
    //wire                                                         wildcard_loses;
-   wire                                                         wildcard_wins;
+   wire                                               wildcard_wins        ;
    
-   wire [3:0]                                                   wildcard_address;
-   wire [3:0]                                                   metadata_fifo_dout;
+   wire  [OPENFLOW_WILDCARD_TABLE_DEPTH-1:0]          wildcard_address     ;
+   wire  [OPENFLOW_WILDCARD_TABLE_DEPTH-1:0]          metadata_fifo_dout   ;
    
-   wire                                                         skip_lookup;
+   wire                                               skip_lookup          ;
 
-   wire        bram_cs           ;
-   wire        bram_we           ;
-   wire[`PRIO_WIDTH-1:0]   bram_addr         ;
-   wire[319:0] lut_actions_in    ;
-   wire[319:0] lut_actions_out   ;   
+   wire                                               bram_cs              ;
+   wire                                               bram_we              ;
+   wire  [`PRIO_WIDTH-1:0]                             bram_addr            ;
+   wire  [319:0]                                      lut_actions_in       ;
+   wire  [319:0]                                      lut_actions_out      ;   
    
-   wire[`PRIO_WIDTH+`ACTION_WIDTH-1:0]   tcam_addr_out  ;
-   wire[31:0]  tcam_data_out  ;
-   wire        tcam_we        ;
-   wire[31:0]  tcam_data_in   ;
+   wire  [`PRIO_WIDTH - 1:0]                           tcam_addr_out        ;
+   wire  [OPENFLOW_ENTRY_WIDTH+31:0]                             tcam_data_out        ;
+   wire  [OPENFLOW_ENTRY_WIDTH-1:0]                              tcam_data_mask_out   ;
+   wire                                               tcam_we              ;
+   wire  [OPENFLOW_ENTRY_WIDTH+31:0]                             tcam_data_in         ;
+   wire  [OPENFLOW_ENTRY_WIDTH-1:0]                              tcam_data_mask_in    ;   
    
-   wire [7:0]head_combine;
+   wire  [7:0]                                        head_combine         ;
    
-   wire [3:0] counter_addr_out;
-   wire counter_addr_rd;
-   wire [31:0]pkt_counter_in;
-   wire [31:0]byte_counter_in;
-   wire wildcard_hit_dout;
-   wire actions_hit;
-   wire [3:0]  src_port;
+   wire  [OPENFLOW_WILDCARD_TABLE_DEPTH-1:0]          counter_addr_out     ;
+   wire                                               counter_addr_rd      ;
+   wire  [31:0]                                       pkt_counter_in       ;
+   wire  [31:0]                                       byte_counter_in      ;  
+   wire                                               wildcard_hit_dout    ;
+   wire                                               actions_hit          ;
+   wire  [3:0]                                        src_port             ;
    
    //------------------------- Modules -------------------------------
 
@@ -183,191 +180,194 @@
          .clk           (clk)
          );*/
 
-    small_fifo #(.WIDTH(DATA_WIDTH+CTRL_WIDTH),.MAX_DEPTH_BITS(5))
-    input_fifo
-        (    .din           ({in_ctrl, in_data}),  // Data in
-             .wr_en         (in_wr),             // Write enable
-             .rd_en         (in_fifo_rd_en),    // Read the next word
-             .dout          ({in_fifo_ctrl, in_fifo_data}),
-             .full          (),
-             .prog_full     (),
-             .nearly_full   (in_fifo_nearly_full),
-             .empty         (in_fifo_empty),
-             .reset         (reset),
-             .clk           (clk)
-             );
+    small_fifo 
+    #(.WIDTH            (DATA_WIDTH+CTRL_WIDTH),
+      .MAX_DEPTH_BITS   (5)
+    )input_fifo
+    (
+      .din           ({in_ctrl, in_data}),  // Data in
+      .wr_en         (in_wr),             // Write enable
+      .rd_en         (in_fifo_rd_en),    // Read the next word
+      .dout          ({in_fifo_ctrl, in_fifo_data}),
+      .full          (),
+      .prog_full     (),
+      .nearly_full   (in_fifo_nearly_full),
+      .empty         (in_fifo_empty),
+      .reset         (reset),
+      .clk           (clk)
+    );
 
 
    header_parser
-     #(.DATA_WIDTH                  (DATA_WIDTH),
-       .CTRL_WIDTH                  (CTRL_WIDTH),
-       .PKT_SIZE_WIDTH              (PKT_SIZE_WIDTH),
-       .ADDITIONAL_WORD_SIZE        (`OPENFLOW_ENTRY_VLAN_ID_WIDTH),
-       .ADDITIONAL_WORD_POS         (`OPENFLOW_ENTRY_VLAN_ID_POS),
-       .ADDITIONAL_WORD_BITMASK     (16'hEFFF),  // --- PCP:3bits VID:12bits
-       .ADDITIONAL_WORD_CTRL        (`VLAN_CTRL_WORD),
-       .ADDITIONAL_WORD_DEFAULT     (16'hFFFF),
-       .FLOW_ENTRY_SIZE_ALL         (`OPENFLOW_ENTRY_WIDTH_ALL),
-       .OPENFLOW_ENTRY_WIDTH        (OPENFLOW_ENTRY_WIDTH),
-       .CURRENT_TABLE_ID            (CURRENT_TABLE_ID)
-       )
-       header_parser
-         ( // --- Interface to the previous stage
-           .in_data                   (in_data),
-           .in_ctrl                   (in_ctrl),
-           .in_wr                     (in_wr),
-
-           // --- Interface to matchers
-           .flow_entry                (flow_entry),
-           //.flow_entry_src_port       (flow_entry_src_port_parsed),
-           .pkt_size                  (pkt_size),
-           .flow_entry_vld            (flow_entry_vld),
-           
-           .skip_lookup                 (skip_lookup),
-           
-           .head_combine              (head_combine),
-           // --- Misc
-           .reset                     (reset),
-           .clk                       (clk)
-           
-           
-           );
+   #(.DATA_WIDTH                  (DATA_WIDTH),
+     .CTRL_WIDTH                  (CTRL_WIDTH),
+     .PKT_SIZE_WIDTH              (PKT_SIZE_WIDTH),
+     .ADDITIONAL_WORD_SIZE        (`OPENFLOW_ENTRY_VLAN_ID_WIDTH),
+     .ADDITIONAL_WORD_POS         (`OPENFLOW_ENTRY_VLAN_ID_POS),
+     .ADDITIONAL_WORD_BITMASK     (16'hEFFF),  // --- PCP:3bits VID:12bits
+     .ADDITIONAL_WORD_CTRL        (`VLAN_CTRL_WORD),
+     .ADDITIONAL_WORD_DEFAULT     (16'hFFFF),
+     .FLOW_ENTRY_SIZE_ALL         (OPENFLOW_ENTRY_WIDTH_ALL),
+     .OPENFLOW_ENTRY_WIDTH        (OPENFLOW_ENTRY_WIDTH+32),
+     .CURRENT_TABLE_ID            (CURRENT_TABLE_ID)
+   )
+   header_parser
+   ( // --- Interface to the previous stage
+      .in_data                   (in_data),
+      .in_ctrl                   (in_ctrl),
+      .in_wr                     (in_wr),
+   
+      // --- Interface to matchers
+      .flow_entry                (flow_entry),
+      //.flow_entry_src_port       (flow_entry_src_port_parsed),
+      .pkt_size                  (pkt_size),
+      .flow_entry_vld            (flow_entry_vld),
+      
+      .skip_lookup                 (skip_lookup),
+      
+      .head_combine              (head_combine),
+      // --- Misc
+      .reset                     (reset),
+      .clk                       (clk)             
+   );
 
    wildcard_match
-     #(.NUM_OUTPUT_QUEUES(NUM_OUTPUT_QUEUES),
-       .PKT_SIZE_WIDTH(PKT_SIZE_WIDTH),
-       .OPENFLOW_WILDCARD_LOOKUP_REG_ADDR_WIDTH(OPENFLOW_WILDCARD_LOOKUP_REG_ADDR_WIDTH),
-       .OPENFLOW_WILDCARD_LOOKUP_BLOCK_ADDR(OPENFLOW_WILDCARD_LOOKUP_BLOCK_ADDR),
-       .OPENFLOW_ENTRY_WIDTH (OPENFLOW_ENTRY_WIDTH),
-       .OPENFLOW_WILDCARD_TABLE_SIZE (OPENFLOW_WILDCARD_TABLE_SIZE),
-       .CURRENT_TABLE_ID(CURRENT_TABLE_ID)
-       ) wildcard_match
-       ( // --- Interface to flow entry collector
-         .flow_entry                           (flow_entry),          // size OPENFLOW_ENTRY_WIDTH
-         //.flow_entry_src_port_parsed           (flow_entry_src_port_parsed),
-         .flow_entry_vld                       (flow_entry_vld),
-         .wildcard_match_rdy                   (wildcard_match_rdy),
-         .pkt_size                             (pkt_size),            // size 12
+   #(.NUM_OUTPUT_QUEUES             (NUM_OUTPUT_QUEUES),
+     .PKT_SIZE_WIDTH                (PKT_SIZE_WIDTH),
+     .OPENFLOW_ENTRY_WIDTH          (OPENFLOW_ENTRY_WIDTH+32),
+     .OPENFLOW_WILDCARD_TABLE_SIZE  (OPENFLOW_WILDCARD_TABLE_SIZE),
+     .CURRENT_TABLE_ID              (CURRENT_TABLE_ID),
+     .OPENFLOW_WILDCARD_TABLE_DEPTH (OPENFLOW_WILDCARD_TABLE_DEPTH),
+     .CMP_WIDTH                     (OPENFLOW_ENTRY_WIDTH+32)
 
-         // --- Interface to arbiter
-         .wildcard_hit                         (wildcard_hit),
-         //.wildcard_miss                        (wildcard_miss),
-         .wildcard_data                        (wildcard_data[`OPENFLOW_ACTION_WIDTH-1 : 0]),
-         //.flow_entry_src_port                  (flow_entry_src_port),// packet processor need it.
-         .wildcard_data_vld                    (wildcard_data_vld),
-        // .wildcard_wins                        (wildcard_wins),
-        // .wildcard_loses                       (wildcard_loses),
-         
-         .skip_lookup                       (skip_lookup),
-         
-         .openflow_timer                       (s_counter), // bus size 32
-
-         // --- Interface to Watchdog Timer
-         .table_flush                          (table_flush),
-
-         .clk                                  (clk),
-         .reset                                (reset),
-         .wildcard_address                      (wildcard_address),
+   ) wildcard_match
+   ( // --- Interface to flow entry collector
+      .flow_entry                           (flow_entry),          // size OPENFLOW_ENTRY_WIDTH
+      .flow_entry_vld                       (flow_entry_vld),
+      .wildcard_match_rdy                   (wildcard_match_rdy),
+      .pkt_size                             (pkt_size),            // size 12
+ 
+      // --- Interface to arbiter
+      .wildcard_hit                          (wildcard_hit),
+      .wildcard_data                         (wildcard_data[OPENFLOW_ACTION_WIDTH-1 : 0]),
+      .wildcard_data_vld                     (wildcard_data_vld),
       
-         .bram_cs                               (bram_cs        ),
-         .bram_we                               (bram_we        ),
-         .bram_addr                             (bram_addr      ),
-         .lut_actions_in                        (lut_actions_in ),
-         .lut_actions_out                       (lut_actions_out),
-         
-         .tcam_addr           (tcam_addr_out),
-         .tcam_data_in        (tcam_data_out),
-         .tcam_we             (tcam_we      ),
-         .tcam_data_out       (tcam_data_in ),
-         
-         .counter_addr_in (counter_addr_out),
-         .counter_addr_rd  (counter_addr_rd),
-         .pkt_counter_out   (pkt_counter_in),
-         .byte_counter_out  (byte_counter_in)
-         
-         );
+      .skip_lookup                           (skip_lookup),
+      
+      .openflow_timer                        (s_counter), // bus size 32
+ 
+      // --- Interface to Watchdog Timer
+     // .table_flush                           (table_flush),
+ 
+      .clk                                   (clk),
+      .reset                                 (reset),
+      .wildcard_address                      (wildcard_address),
+    
+      .bram_cs                               (bram_cs        ),
+      .bram_we                               (bram_we        ),
+      .bram_addr                             (bram_addr      ),
+      .lut_actions_in                        (lut_actions_in ),
+      .lut_actions_out                       (lut_actions_out),
+      
+      .tcam_addr                             (tcam_addr_out),
+      .tcam_data_in                          (tcam_data_out),
+      .tcam_data_mask_in                     (tcam_data_mask_out),
+      .tcam_we                               (tcam_we      ),
+      .tcam_data_out                         (tcam_data_in ),
+      .tcam_data_mask_out                    (tcam_data_mask_in),
+      
+      .counter_addr_in                       (counter_addr_out),
+      .counter_addr_rd                       (counter_addr_rd),
+      .pkt_counter_out                       (pkt_counter_in),
+      .byte_counter_out                      (byte_counter_in)
+       
+   );
    
    small_fifo
-     #(.WIDTH(`OPENFLOW_ACTION_WIDTH),
-       .MAX_DEPTH_BITS(3))
-      result_fifo
-        (.din           ({wildcard_data}), // Data in
-         .wr_en         (wildcard_data_vld),   // Write enable
-         .rd_en         (result_fifo_rd_en),   // Read the next word
-         .dout          (result_fifo_dout),
-         .full          (),
-         .nearly_full   (result_fifo_nearly_full),
-         .prog_full     (),
-         .empty         (result_fifo_empty),
-         .reset         (reset),
-         .clk           (clk)
-         );
+   #( .WIDTH                           (OPENFLOW_ACTION_WIDTH),
+      .MAX_DEPTH_BITS                  (3)
+    )result_fifo
+    (
+      .din           ({wildcard_data}), // Data in
+      .wr_en         (wildcard_data_vld),   // Write enable
+      .rd_en         (result_fifo_rd_en),   // Read the next word
+      .dout          (result_fifo_dout),
+      .full          (),
+      .nearly_full   (result_fifo_nearly_full),
+      .prog_full     (),
+      .empty         (result_fifo_empty),
+      .reset         (reset),
+      .clk           (clk)
+   );
+    
    small_fifo
-    #(.WIDTH(1),
-      .MAX_DEPTH_BITS(3))
-     wildcard_hit_fifo
-       (.din           (wildcard_hit), // Data in
-        .wr_en         (wildcard_data_vld),   // Write enable
-        .rd_en         (result_fifo_rd_en),   // Read the next word
-        .dout          (wildcard_hit_dout),
-        .full          (),
-        .nearly_full   (result_fifo_nearly_full),
-        .prog_full     (),
-        .empty         (result_fifo_empty),
-        .reset         (reset),
-        .clk           (clk)
-        );
+   #( .WIDTH               (1),
+      .MAX_DEPTH_BITS      (3)
+   )wildcard_hit_fifo
+   (
+      .din           (wildcard_hit), // Data in
+      .wr_en         (wildcard_data_vld),   // Write enable
+      .rd_en         (result_fifo_rd_en),   // Read the next word
+      .dout          (wildcard_hit_dout),
+      .full          (),
+      .nearly_full   (result_fifo_nearly_full),
+      .prog_full     (),
+      .empty         (result_fifo_empty),
+      .reset         (reset),
+      .clk           (clk)
+   );
                      
    small_fifo
-     #(.WIDTH(4),
-       .MAX_DEPTH_BITS(3))
-      metadata_fifo
-        (.din           (wildcard_address), // Data in
-         .wr_en         (wildcard_data_vld),   // Write enable
-         .rd_en         (result_fifo_rd_en),   // Read the next word
-         .dout          (metadata_fifo_dout),
-         .full          (),
-         .nearly_full   (metadata_fifo_nearly_full),
-         .prog_full     (),
-         .empty         (metadata_fifo_empty),
-         .reset         (reset),
-         .clk           (clk)
-         );
+   #(.WIDTH            (OPENFLOW_WILDCARD_TABLE_DEPTH),
+     .MAX_DEPTH_BITS   (3)
+    )metadata_fifo
+   (
+      .din           (wildcard_address), // Data in
+      .wr_en         (wildcard_data_vld),   // Write enable
+      .rd_en         (result_fifo_rd_en),   // Read the next word
+      .dout          (metadata_fifo_dout),
+      .full          (),
+      .nearly_full   (metadata_fifo_nearly_full),
+      .prog_full     (),
+      .empty         (metadata_fifo_empty),
+      .reset         (reset),
+      .clk           (clk)
+   );
 
 
     wildcard_processor
-        #(
-          .TABLE_NUM        (TABLE_NUM),
-          .CURRENT_TABLE_ID (CURRENT_TABLE_ID)
-       )wildcard_processor
-       (
-               .result_fifo_dout    (result_fifo_dout),
-               .result_fifo_rd_en   (result_fifo_rd_en),
-               .result_fifo_empty   (result_fifo_empty),
-       
-               // --- interface to input fifo
-               .in_fifo_ctrl        (in_fifo_ctrl),
-               .in_fifo_data        (in_fifo_data),
-               .in_fifo_rd_en       (in_fifo_rd_en),
-               .in_fifo_empty       (in_fifo_empty),
-       
-               // --- interface to output
-               .out_wr              (wildcard_out_wr),
-               .out_rdy             (wildcard_out_rdy),
-               .out_data            (wildcard_out_data),
-               .out_ctrl            (wildcard_out_ctrl),
-               
-               .actions             (actions),
-               .actions_en       (actions_en),
-               .actions_hit      (actions_hit),
-               .wildcard_hit_dout   (wildcard_hit_dout),
-               .src_port            (src_port),
-               
-               .clk                 (clk),
-               .reset               (reset),
-               
-               .skip_lookup         (skip_lookup)
-       );
+    #(
+      .TABLE_NUM        (TABLE_NUM),
+      .CURRENT_TABLE_ID (CURRENT_TABLE_ID)
+    )wildcard_processor
+    (
+      .result_fifo_dout    (result_fifo_dout),
+      .result_fifo_rd_en   (result_fifo_rd_en),
+      .result_fifo_empty   (result_fifo_empty),
+      
+      // --- interface to input fifo
+      .in_fifo_ctrl        (in_fifo_ctrl),
+      .in_fifo_data        (in_fifo_data),
+      .in_fifo_rd_en       (in_fifo_rd_en),
+      .in_fifo_empty       (in_fifo_empty),
+      
+      // --- interface to output
+      .out_wr              (wildcard_out_wr),
+      .out_rdy             (wildcard_out_rdy),
+      .out_data            (wildcard_out_data),
+      .out_ctrl            (wildcard_out_ctrl),
+      
+      .actions             (actions),
+      .actions_en          (actions_en),
+      .actions_hit         (actions_hit),
+      .wildcard_hit_dout   (wildcard_hit_dout),
+      .src_port            (src_port),
+      
+      .clk                 (clk),
+      .reset               (reset),
+      
+      .skip_lookup         (skip_lookup)
+   );
     
    action_processor 
    #(
@@ -389,6 +389,8 @@
        .out_ctrl         (out_ctrl),
        .out_wr           (out_wr  ),
        .out_rdy          (out_rdy ),
+       
+       .config_sw_ok     (config_sw_ok),
                 
        .clk              (clk),      
        .reset            (reset)
@@ -397,38 +399,42 @@
      
    output_port_lookup_reg_master 
    #(
+      .CMP_WIDTH  (OPENFLOW_ENTRY_WIDTH),
       .LUT_DEPTH(OPENFLOW_WILDCARD_TABLE_SIZE),
-      .TABLE_NUM(`TABLE_NUM-1)
+      .TABLE_NUM(TABLE_NUM-1),
+      .CURRENT_TABLE_ID (CURRENT_TABLE_ID)
    )
    output_port_lookup_reg_master
    (
-   .data_output_port_lookup_i (data_output_port_lookup_i),
-   .addr_output_port_lookup_i (addr_output_port_lookup_i),
-   .req_output_port_lookup_i  (req_output_port_lookup_i ),
-   .rw_output_port_lookup_i   (rw_output_port_lookup_i  ),
-   .ack_output_port_lookup_o  (ack_output_port_lookup_o ),
-   .data_output_port_lookup_o   (data_output_port_lookup_o  ),
+   .data_output_port_lookup_i    (data_output_port_lookup_i),
+   .addr_output_port_lookup_i    (addr_output_port_lookup_i),
+   .req_output_port_lookup_i     (req_output_port_lookup_i ),
+   .rw_output_port_lookup_i      (rw_output_port_lookup_i  ),
+   .ack_output_port_lookup_o     (ack_output_port_lookup_o ),
+   .data_output_port_lookup_o    (data_output_port_lookup_o  ),
    
-   .bram_cs         (bram_cs),
-   .bram_we         (bram_we),
-   .bram_addr       (bram_addr),
-   .lut_actions_in  (lut_actions_in),
-   .lut_actions_out (lut_actions_out),
+   .bram_cs                      (bram_cs),
+   .bram_we                      (bram_we),
+   .bram_addr                    (bram_addr),
+   .lut_actions_in               (lut_actions_in),
+   .lut_actions_out              (lut_actions_out),
+                
+   .tcam_addr_out                (tcam_addr_out),
+   .tcam_data_out                (tcam_data_out),
+   .tcam_data_mask_out           (tcam_data_mask_out),
+   .tcam_we                      (tcam_we),
+   .tcam_data_in                 (tcam_data_in),
+   .tcam_data_mask_in            (tcam_data_mask_in),
    
-   .tcam_addr_out   (tcam_addr_out),
-   .tcam_data_out   (tcam_data_out),
-   .tcam_we         (tcam_we),
-   .tcam_data_in    (tcam_data_in),
+   .counter_addr_out             (counter_addr_out),
+   .counter_addr_rd              (counter_addr_rd),
+   .pkt_counter_in               (pkt_counter_in),
+   .byte_counter_in              (byte_counter_in),
    
-   .counter_addr_out (counter_addr_out),
-   .counter_addr_rd  (counter_addr_rd),
-   .pkt_counter_in   (pkt_counter_in),
-   .byte_counter_in  (byte_counter_in),
-   
-   .head_combine     (head_combine),
+   .head_combine                 (head_combine),
       
-   .clk  (clk),
-   .reset(reset)
+   .clk                          (clk),
+   .reset                        (reset)
    );
 /*
    generic_regs

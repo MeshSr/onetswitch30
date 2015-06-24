@@ -80,8 +80,11 @@
     wire [CTRL_WIDTH-1:0] qos_fifo_ctrl_out [QUEUE_NUM-1:0];
     wire [DATA_WIDTH-1:0] qos_fifo_data_out [QUEUE_NUM-1:0];
     
-    
-    
+    reg [DATA_WIDTH-1:0] metadata_qos;
+    reg metadata_qos_wr;
+    reg metadata_qos_rd;
+    wire [DATA_WIDTH-1:0] metadata_qos_out;
+    wire metadata_qos_empty;
     
     
     
@@ -109,19 +112,40 @@
             .clk           (clk)
             );
     
-    
+    small_fifo #(.WIDTH(DATA_WIDTH),.MAX_DEPTH_BITS(4))
+    metadata_qos_fifo
+        (    .din           (metadata_qos),  // Data in
+             .wr_en         (metadata_qos_wr),             // Write enable
+             .rd_en         (metadata_qos_rd),    // Read the next word
+             .dout          (metadata_qos_out),
+             .full          (),
+             .prog_full     (),
+             .nearly_full   (),
+             .empty         (metadata_qos_empty),
+             .reset         (reset),
+             .clk           (clk)
+             );
+             
     assign in_rdy=!input_fifo_nearly_full;
     
     
     reg [3:0]cur_st,nxt_st;
+    reg [3:0]cur_st_rd,nxt_st_rd;
+    
     localparam IDLE=0;
     localparam WAIT_QOS=1;
     localparam READ=2;
+    localparam WAIT_EOP_RD=3;
+    localparam EOP_RD=4;
+    
+    localparam RD_IDLE=0;
+    localparam RD_READ=1;
     localparam WRITE=3;
     localparam NO_WRITE=4;
     localparam WAIT_EOP=5;
     localparam WAIT_NO_WRITE_EOP=6;
-    localparam EOP=7;
+    localparam RD_EOP=7;
+    
     
     always@(posedge clk or negedge reset)
         if(reset)  cur_st<=0;
@@ -129,7 +153,7 @@
         
     always@(*)
         begin
-            nxt_st=0;
+            nxt_st=cur_st;
             case(cur_st)
                 IDLE:
                     if(in_wr) nxt_st=WAIT_QOS;
@@ -138,9 +162,8 @@
                     if(in_ctrl==`METEDATA_NUM) nxt_st=READ;
                     else nxt_st=WAIT_QOS;
                 READ:
-                    if(|(qos_queue_wr & qos_fifo_nearly_full))nxt_st=NO_WRITE;
-                    else nxt_st=WRITE;
-                NO_WRITE:
+                    if(in_ctrl==0)nxt_st=WAIT_EOP_RD;
+                /*NO_WRITE:
                     if(input_fifo_ctrl_out==0) nxt_st=WAIT_NO_WRITE_EOP;
                     else nxt_st=NO_WRITE;
                 WRITE:
@@ -151,8 +174,10 @@
                     else nxt_st=WAIT_NO_WRITE_EOP;
                 WAIT_EOP:
                     if(input_fifo_ctrl_out!=0) nxt_st=EOP;
-                    else nxt_st=WAIT_EOP;
-                EOP:nxt_st=IDLE;
+                    else nxt_st=WAIT_EOP;*/
+                WAIT_EOP_RD:
+                    if(in_ctrl!=0) nxt_st=EOP_RD;
+                EOP_RD:nxt_st=IDLE;
                 default:nxt_st=IDLE;
             endcase
         end
@@ -161,22 +186,22 @@
    always@(posedge clk)
    if(reset)
       transmit_vld<=0;
-   else if(cur_st==WAIT_EOP && input_fifo_ctrl_out!=0)
-      transmit_vld[queue_fifo_wr_decoded]<=1;
+   else if(cur_st_rd==WAIT_EOP && input_fifo_ctrl_out!=0)
+      transmit_vld[metadata_qos_out]<=1;
    else transmit_vld<=0;
          
    always@(posedge clk)
    if(reset)
       transmit_byte<=8;
-   else if(cur_st==WAIT_NO_WRITE_EOP | cur_st==WAIT_EOP)
+   else if(cur_st_rd==WAIT_NO_WRITE_EOP | cur_st_rd==WAIT_EOP)
       transmit_byte<=transmit_byte+8;
    else transmit_byte<=8;
          
    always@(posedge clk)
    if(reset)
       drop_vld<=0;
-   else if(cur_st==WAIT_NO_WRITE_EOP && input_fifo_ctrl_out!=0)
-      drop_vld[queue_fifo_wr_decoded]<=1;
+   else if(cur_st_rd==WAIT_NO_WRITE_EOP && input_fifo_ctrl_out!=0)
+      drop_vld[metadata_qos_out]<=1;
    else drop_vld<=0;         
          
          
@@ -185,7 +210,7 @@
     always@(*)
         if(reset)
             qos_queue_wr=0;
-        else case(queue_fifo_wr_decoded)
+        else case(metadata_qos_out)
             0:qos_queue_wr=5'b00001;
             1:qos_queue_wr=5'b00010;
             2:qos_queue_wr=5'b00100;
@@ -194,23 +219,66 @@
             default:qos_queue_wr=5'b00001;
             endcase
     
-    always@(posedge clk)
+    always@(*)
         if(reset)
-            queue_fifo_wr_decoded<=0;
+            metadata_qos=0;
         else if(cur_st==WAIT_QOS && in_ctrl==`METEDATA_NUM)
-            queue_fifo_wr_decoded<=in_data[`METADATA_QOS_QUEUE_POS+`METADATA_QOS_QUEUE_LEN-1:`METADATA_QOS_QUEUE_POS];
+            metadata_qos=in_data;//[`METADATA_QOS_QUEUE_POS+`METADATA_QOS_QUEUE_LEN-1:`METADATA_QOS_QUEUE_POS];
+        else metadata_qos=0;
+            
+   always@(*)
+       if(reset)
+           metadata_qos_wr=0;
+       else if(cur_st==WAIT_QOS && in_ctrl==`METEDATA_NUM)
+           metadata_qos_wr=1;    
+       else metadata_qos_wr=0;         
+            
+
+
+    always@(posedge clk or negedge reset)
+        if(reset)  cur_st_rd<=0;
+        else       cur_st_rd<=nxt_st_rd;
         
+    always@(*)
+    begin
+      nxt_st_rd=cur_st_rd;
+      case(cur_st_rd)
+         RD_IDLE:if(!metadata_qos_empty) nxt_st_rd=RD_READ;
+         RD_READ:
+            if(|(qos_queue_wr & qos_fifo_nearly_full))nxt_st_rd=NO_WRITE;
+            else nxt_st_rd=WRITE;
+         NO_WRITE:
+             if(input_fifo_ctrl_out==0) nxt_st_rd=WAIT_NO_WRITE_EOP;
+             else nxt_st_rd=NO_WRITE;
+         WRITE:
+             if(input_fifo_ctrl_out==0) nxt_st_rd=WAIT_EOP;
+             else nxt_st_rd=WRITE;
+         WAIT_NO_WRITE_EOP:
+             if(input_fifo_ctrl_out!=0) nxt_st_rd=RD_EOP;
+             else nxt_st_rd=WAIT_NO_WRITE_EOP;
+         WAIT_EOP:
+             if(input_fifo_ctrl_out!=0) nxt_st_rd=RD_EOP;
+             else nxt_st_rd=WAIT_EOP;
+         RD_EOP:nxt_st_rd=RD_IDLE;
+         default:nxt_st_rd=RD_IDLE;
+      endcase
+   end
+    
+    always@(*)
+      if(cur_st_rd==RD_IDLE && (!metadata_qos_empty))metadata_qos_rd=1;
+      else metadata_qos_rd=0;
+    
     
     always@(*)
         begin
             input_fifo_rd_en=0;
-            if(cur_st==READ | cur_st==NO_WRITE | cur_st==WRITE)
+            if(cur_st_rd==RD_READ | cur_st_rd==NO_WRITE | cur_st_rd==WRITE)
                 input_fifo_rd_en=~input_fifo_empty;
-            else if(cur_st==WAIT_EOP && input_fifo_ctrl_out != 0 )
+            else if(cur_st_rd==WAIT_EOP && input_fifo_ctrl_out != 0 )
                 input_fifo_rd_en=0;
-            else if(cur_st==WAIT_NO_WRITE_EOP && input_fifo_ctrl_out != 0 )
+            else if(cur_st_rd==WAIT_NO_WRITE_EOP && input_fifo_ctrl_out != 0 )
                 input_fifo_rd_en=0;
-            else if(cur_st==WAIT_EOP | cur_st==WAIT_NO_WRITE_EOP)
+            else if(cur_st_rd==WAIT_EOP | cur_st_rd==WAIT_NO_WRITE_EOP)
                 input_fifo_rd_en=~input_fifo_empty;
         end
             
@@ -223,7 +291,7 @@
     always@(*)
         if(reset)
             queue_fifo_wr=0;
-        else if(input_fifo_rd_en_d && (cur_st==WRITE | cur_st==WAIT_EOP))
+        else if(input_fifo_rd_en_d && (cur_st_rd==WRITE | cur_st_rd==WAIT_EOP))
             queue_fifo_wr=qos_queue_wr;
         else queue_fifo_wr=0;
     /*generate 

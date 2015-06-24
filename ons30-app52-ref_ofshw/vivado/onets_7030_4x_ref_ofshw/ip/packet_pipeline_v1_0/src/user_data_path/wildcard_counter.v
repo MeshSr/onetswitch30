@@ -42,7 +42,7 @@ module wildcard_counter
    
     );
 
-
+`ifdef ONETS45
 begin   
     reg [31:0]byte_count[LUT_DEPTH-1:0];
     reg [31:0]pkt_count [LUT_DEPTH-1:0];
@@ -104,7 +104,7 @@ begin
       else if(counter_addr_rd) 
         byte_counter_out<=byte_count[counter_addr_in];
 end
-/*
+
 `elsif ONETS30
 begin   
     reg [31:0]byte_count[LUT_DEPTH-1:0];
@@ -173,6 +173,6 @@ begin
     pkt_counter_out=0;
     byte_counter_out=0;
 end 
-`endif*/
+`endif
     
 endmodule

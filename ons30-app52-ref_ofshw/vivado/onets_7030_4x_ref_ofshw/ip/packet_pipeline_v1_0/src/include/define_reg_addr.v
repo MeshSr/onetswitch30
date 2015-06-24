@@ -17,7 +17,10 @@
 `define OUTPUT_PORT_LOOKUP_TAG          4'h0
 `define METER_TAG                       4'h1
 `define QOS_TAG                         4'h2
-`define MONITOR_REG                     4'h3
+`define CONFIG                          4'h3
+
+//`define QUEUE_NUM                        6
+
 `define LUT_ACTION_TAG  2'h1
 `define TCAM_TAG  2'h2
 `define HEAD_PARSER_TAG  2'h3
@@ -36,7 +39,11 @@
 `define METER_DROP_PKT_COUNTER   8'h28
 `define METER_DROP_BYTE_COUNTER  8'h2c
 
-
+`define CONFIG_SW_STARTED        8'h0
+`define CONFIG_CARD              8'h4
+`define CONFIG_VERSION           8'h8
+`define CONFIG_TABLE_NUM         8'hc
+`define CONFIG_DEPTH             8'h10
 
 
 /*
