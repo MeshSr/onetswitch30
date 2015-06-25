@@ -1,0 +1,23 @@
+This init.sh script runs the startup configurations for the MeshSr OpenFlow switch reference design.
+For either the OFS-SW(software flow tables ONLY) or the OFS-HW(with FPGA hardware flow tables), the script
+1. configures the network interfaces, such as IP address, MAC address, etc.
+2. starts the OpenFlow software on the switch, sets up udatapath and secchan.
+
+NOTE
+1. This script should be put in the root of the FAT partition, without renaming.
+
+2. Change the MAC/IP address according to your environment.
+   The default MAC address of the ethernet interfaces are derived from 'switch_ip'.
+   You can modify them especially when you setup a bigger network with several devices.
+
+3. Default entries are explicitly added by dpctl in OFS-SW.
+   ./utilities/dpctl tcp:$local_ip:$local_port flow-mod cmd=add,table=0,prio=0 apply goto:1
+   ./utilities/dpctl tcp:$local_ip:$local_port flow-mod cmd=add,table=1,prio=0 apply goto:2
+   ./utilities/dpctl tcp:$local_ip:$local_port flow-mod cmd=add,table=2,prio=0 apply goto:3
+
+   The pkt-in entry from controller's logic is always be handled by the switch's software.
+   In OFS-SW, all the tables are software-implemented so the pkt-in can be handled in any # of table.
+   While in OFS-HW, it has to be written into the first software-implemented table. i.e. Table #3 of ONetSwitch30/45 or Table #1 of ONetSwitch20.
+
+   Adding these entries keeps the consistency between OFS-SW and OFS-HW, but is not a must when running OFS-SW ONLY or OFS-HW ONLY in your scenario.
+   You can remove these default entries if you want.

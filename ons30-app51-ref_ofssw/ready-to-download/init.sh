@@ -17,10 +17,20 @@ ofprotocol_options="--inactivity-probe=90"
 id_num=`echo $switch_ip | awk -F '.' '{print $4}'`
 if [ $id_num -lt 10 ]; then
     datapath_id=00000000000$id_num
+    mac_d1=00
+    mac_d2=0$id_num
 elif [ $id_num -lt 100 ]; then
     datapath_id=0000000000$id_num
+    mac_d1=00
+    mac_d2=$id_num
+elif [ $id_num -lt 200 ]; then
+    datapath_id=0000000000$id_num
+    mac_d1=01
+    mac_d2=`echo $id_num | cut -c 2-3`
 else
     datapath_id=000000000$id_num
+    mac_d1=02
+    mac_d2=`echo $id_num | cut -c 2-3`
 fi
 
 echo "Networking Initial, Please wait..."
@@ -31,17 +41,17 @@ ifconfig eth3 up
 ifconfig eth4 up
 sleep 1
 
-ifconfig eth0 down
-ifconfig eth1 down
-ifconfig eth2 down
-ifconfig eth3 down
 ifconfig eth4 down
+ifconfig eth3 down
+ifconfig eth2 down
+ifconfig eth1 down
+ifconfig eth0 down
 
-ifconfig eth0 hw ether 00:0a:35:00:12:00
-ifconfig eth1 hw ether 00:0a:35:01:12:01
-ifconfig eth2 hw ether 00:0a:35:01:12:02
-ifconfig eth3 hw ether 00:0a:35:01:12:03
-ifconfig eth4 hw ether 00:0a:35:01:12:04
+ifconfig eth0 hw ether 00:0a:35:$mac_d1:$mac_d2:00
+ifconfig eth1 hw ether 00:0a:35:$mac_d1:$mac_d2:01
+ifconfig eth2 hw ether 00:0a:35:$mac_d1:$mac_d2:02
+ifconfig eth3 hw ether 00:0a:35:$mac_d1:$mac_d2:03
+ifconfig eth4 hw ether 00:0a:35:$mac_d1:$mac_d2:04
 sleep 1
 
 ifconfig eth0 $switch_ip netmask $switch_netmask up
@@ -53,15 +63,13 @@ ifconfig lo up
 sleep 1
 
 ret=`route | grep "default" | awk '{print $1}'`
-if [ ! $ret ]
-then
+if [ ! $ret ]; then
     route add default gw $gateway_ip
 fi
 
 echo "Network Interfaces Initial Done"
 
-if [ ! -d $ofs_dir ]
-then
+if [ ! -d $ofs_dir ]; then
     echo "ERROR: Please copy ofs binaries to the directory \"$ofs_dir\""
     exit
 fi
@@ -73,16 +81,15 @@ echo "Starting configuring udatapath..."
 ./udatapath/ofdatapath --datapath-id=$datapath_id --interfaces=$interfaces ptcp:$local_port $ofdatapath_options &
 sleep 3
 ret=`ps | grep "ofdatapath" | awk '{print $6}'`
-if [ ! $ret ]
-then
+if [ ! $ret ]; then
     echo "ERROR: Excuting ofdatapath failed, please check..."
     exit
 fi
 
 #add default entry to be consistent with hardware pkt-in entry
-./utilities/dpctl tcp:127.0.0.1:6632 flow-mod cmd=add,table=0,prio=0 apply goto:1
-./utilities/dpctl tcp:127.0.0.1:6632 flow-mod cmd=add,table=1,prio=0 apply goto:2
-./utilities/dpctl tcp:127.0.0.1:6632 flow-mod cmd=add,table=2,prio=0 apply goto:3
+./utilities/dpctl tcp:$local_ip:$local_port flow-mod cmd=add,table=0,prio=0 apply goto:1
+./utilities/dpctl tcp:$local_ip:$local_port flow-mod cmd=add,table=1,prio=0 apply goto:2
+./utilities/dpctl tcp:$local_ip:$local_port flow-mod cmd=add,table=2,prio=0 apply goto:3
 
 sleep 3
 
@@ -90,8 +97,7 @@ echo "Starting configuring secure channel..."
 ./secchan/ofprotocol tcp:$local_ip:$local_port tcp:$controller_ip:$controller_port $ofprotocol_options &
 sleep 3
 ret=`ps | grep "ofprotocol" | awk '{print $6}'`
-if [ ! $ret ]
-then
+if [ ! $ret ]; then
     echo "ERROR: Excuting ofprotocol failed, please check..."
     exit
 fi
