@@ -86,11 +86,6 @@ if [ ! $ret ]; then
     exit
 fi
 
-#add default entry to be consistent with hardware pkt-in entry
-./utilities/dpctl tcp:$local_ip:$local_port flow-mod cmd=add,table=0,prio=0 apply goto:1
-./utilities/dpctl tcp:$local_ip:$local_port flow-mod cmd=add,table=1,prio=0 apply goto:2
-./utilities/dpctl tcp:$local_ip:$local_port flow-mod cmd=add,table=2,prio=0 apply goto:3
-
 sleep 3
 
 echo "Starting configuring secure channel..."

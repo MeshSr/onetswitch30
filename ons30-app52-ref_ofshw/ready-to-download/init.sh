@@ -88,6 +88,9 @@ fi
 
 sleep 3
 
+echo "Write packet-in entry to first software table #3"
+./utilities/dpctl tcp:$local_ip:$local_port flow-mod cmd=add,table=3,prio=0 apply:output=ctrl:65527
+
 echo "Starting configuring secure channel..."
 ./secchan/ofprotocol tcp:$local_ip:$local_port tcp:$controller_ip:$controller_port $ofprotocol_options &
 sleep 3
